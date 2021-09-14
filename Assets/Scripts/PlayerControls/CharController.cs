@@ -20,12 +20,10 @@ public enum CharState
         public int backward;
         public int left;
         public int right;
-        private int _space;
-        public int space
-        {
-            get { return _space; }
-            set { _space = value; }
-        }
+        
+        public int spaceHeld;
+        public int spaceSign;
+
         public int shift;
 
         public int mouse1Held;
@@ -96,7 +94,6 @@ public class CharController : MonoBehaviour
         if (!_charMotions.ContainsKey(CharState.Grappling))
             _charMotions.Add(CharState.Grappling, GrappleMotion.Create(this.gameObject, _charBody, _charCollider));
 
-
         _charBody.velocity = Vector3.zero;
 
         UpdateState();
@@ -107,6 +104,11 @@ public class CharController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         UpdateInputs();
         UpdateState();
+
+        foreach (CharMotions.Motion motion in _charMotions.Values)
+        {
+            motion.UpdateInputs(_inputs);
+        }
     }
 
     public void UpdateInputs()
@@ -118,11 +120,13 @@ public class CharController : MonoBehaviour
         _inputs.shift = Input.GetKey(KeyCode.LeftShift) ? 1 : 0;
 
         if (Input.GetKeyDown(KeyCode.Space))
-            _inputs.space = 1;
+            _inputs.spaceSign = 1;
         else if (Input.GetKeyUp(KeyCode.Space))
-            _inputs.space = -1;
+            _inputs.spaceSign = -1;
         else
-            _inputs.space = 0;
+            _inputs.spaceSign = 0;
+        
+        _inputs.spaceHeld = Input.GetKey(KeyCode.Space) ? 1 : 0;
 
         _inputs.mouse1Held = Input.GetKey(KeyCode.Mouse0) ? 1 : 0;
         _inputs.mouse2Held = Input.GetKey(KeyCode.Mouse1) ? 1 : 0;
@@ -138,22 +142,23 @@ public class CharController : MonoBehaviour
     {
         _previousState = _currentState;
 
-        if ( (_inputs.space > 0) && (!(_charMotions[CharState.Grappling] as GrappleMotion).isGrappled()) ) 
-        {
-            Quaternion lookDirection =  Quaternion.AngleAxis(inputs.mousePositionX, Vector3.up)
-                                        * Quaternion.AngleAxis(inputs.mousePositionY, Vector3.right);
-            (_charMotions[CharState.Grappling] as GrappleMotion).TryGrapple(lookDirection);
-            if ( (_charMotions[CharState.Grappling] as GrappleMotion).isGrappled())
-                _currentState = CharState.Grappling; 
-        } else if ( (_inputs.space < 0))
-        {
-            float min_stand_distance = _charCollider.bounds.extents.y * 1.2f;
-            if (_surfaceControl.contactSeparation < min_stand_distance)
-                _currentState = CharState.Walking;
-            else
-                _currentState = CharState.Freefalling;
-        }
+        bool isGrounded = false, isGrappled = false;
 
+        // check ground
+        float min_stand_distance = _charCollider.bounds.extents.y * 1.2f;
+        if (_surfaceControl.contactSeparation < min_stand_distance)
+            isGrounded = true;
+
+        // check is grappled
+        isGrappled = (_charMotions[CharState.Grappling] as GrappleMotion).isGrappled();
+
+
+        if (!isGrounded && !isGrappled)
+            _currentState = CharState.Freefalling;
+        else if (isGrounded && !isGrappled)
+            _currentState = CharState.Walking;
+        else if (isGrappled)
+            _currentState = CharState.Grappling;
 
         if (_previousState != _currentState)
         {
@@ -162,10 +167,13 @@ public class CharController : MonoBehaviour
                 if (_charMotions.ContainsKey(_previousState))   
                 {
                     _charMotions[_previousState].EndMotion();
+                    _charMotions[_previousState].enabled = false;
                     _charMotions[_currentState].BeginMotion(_charMotions[_previousState].GetVelocity());
                 }
                 else
                     _charMotions[_currentState].BeginMotion(Vector3.zero);
+
+                _charMotions[_currentState].enabled = true;
         }
     }
 
@@ -175,7 +183,6 @@ public class CharController : MonoBehaviour
 
         if (_charMotions.ContainsKey(_currentState))
         {
-            _charMotions[_currentState].UpdateInputs(_inputs);
             _charMotions[_currentState].ProcessMotion();
         }
 

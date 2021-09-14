@@ -17,7 +17,7 @@ namespace CharMotions
 
         protected Vector3 _contactNormal = Vector3.up;
 
-        public void UpdateInputs(InputState newInputs)
+        public virtual void UpdateInputs(InputState newInputs)
         {
             _inputs = newInputs;
         }

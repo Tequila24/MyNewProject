@@ -40,7 +40,10 @@ namespace CharMotions
         {
             if (_velocity.sqrMagnitude < 0.01f)
                 _velocity = Vector3.zero;
+            _charBody.angularVelocity = Vector3.zero;
             
+
+            // VELOCITY
             // Consider _velocity vector as flat-plane vector, which stays that way all the time /
             // and rotates to surface only when applied to Rigidbody
             //
@@ -64,21 +67,30 @@ namespace CharMotions
                 if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) )
                     _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal);
 
-                if (_velocity.sqrMagnitude != 0)
-                    _charBody.transform.rotation = Quaternion.Lerp(_charBody.transform.rotation, Quaternion.LookRotation(_velocity, Vector3.up), 0.2f);
             } else 
             {
                 _velocity = Vector3.Lerp(_velocity, _surfaceControl.rotationFromNormal * _surfaceControl.downhillVector * 10f, 0.1f);
             }
 
             // Adjust char position a little bit above surface
-            Vector3 _heightAdjust = new Vector3(0, (_surfaceControl.contactPoint.y + _charCollider.bounds.extents.y * 1.1f) - _charBody.transform.position.y, 0) * 0.2f;
+            Vector3 _heightAdjust = new Vector3(0, (_surfaceControl.contactPoint.y + _charCollider.bounds.extents.y * 1.2f) 
+                                                - _charBody.transform.position.y, 0) * 0.2f;
 
             _charBody.velocity = ( _heightAdjust
                                    + _surfaceControl.rotationToNormal * _velocity);
 
-            // apply rotation velocity
-            _charBody.angularVelocity = Vector3.zero;
+
+            // ROTATION
+            if (_velocity.sqrMagnitude != 0)
+                _charBody.transform.rotation = Quaternion.RotateTowards(_charBody.transform.rotation, 
+                                                                        Quaternion.LookRotation(_velocity, Vector3.up), 
+                                                                        10f);
+            else
+                _charBody.transform.rotation = Quaternion.RotateTowards(_charBody.transform.rotation,
+                                                                        Quaternion.LookRotation(Vector3.ProjectOnPlane( this.transform.forward,
+                                                                                                                        Vector3.up),
+                                                                                                Vector3.up), 
+                                                                        10f);
         }
 
         public override Vector3 GetVelocity()

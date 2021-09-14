@@ -36,8 +36,8 @@ public class CameraController : MonoBehaviour
         
         Quaternion cameraLookRotation = Quaternion.LookRotation(worldPointLookAt - this.transform.position, Vector3.up);
 
-        this.transform.position = Vector3.Lerp(this.transform.position, _player.transform.position + cameraLookRotation * offset, 0.5f);   
-        this.transform.rotation = Quaternion.Slerp( this.transform.rotation, cameraLookRotation, 0.5f);
+        this.transform.position = Vector3.Lerp(this.transform.position, _player.transform.position + charLookRotation * offset, 0.5f);   
+        this.transform.rotation = Quaternion.Slerp( this.transform.rotation, charLookRotation, 0.5f);
     }
 
     void OnGUI()

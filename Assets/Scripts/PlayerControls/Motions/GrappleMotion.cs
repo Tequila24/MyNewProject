@@ -25,11 +25,17 @@ namespace CharMotions
 
         public Vector3 GetWorldPoint()
         {
-            return grappledObject.transform.position + grappledObject.transform.rotation * localGrapplePoint;
+            if (isGrappled)
+                return grappledObject.transform.position + grappledObject.transform.rotation * localGrapplePoint;
+            else
+                return Vector3.zero;
         }
         public Vector3 GetFromTo(Vector3 pointFrom)
         {
-            return (GetWorldPoint() - pointFrom);
+            if (isGrappled)
+                return (GetWorldPoint() - pointFrom);
+            else
+                return Vector3.zero;
         }
 
         public void Reset()
@@ -44,11 +50,11 @@ namespace CharMotions
 
     public class GrappleMotion : CharMotions.Motion
     {
-        float MaxGrappleDistance = 200.0f;
+        float _maxGrappleDistance = 200.0f;
 
-        private LineRenderer lineRender = null;
+        private LineRenderer _lineRender = null;
 
-        GrappleInfo grappleInfo = new GrappleInfo();
+        GrappleInfo _grappleInfo = new GrappleInfo();
 
         public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider)
         {
@@ -62,58 +68,85 @@ namespace CharMotions
 
 
             if (motion._charBody.GetComponent<LineRenderer>() == null) {
-                motion.lineRender = motion._charBody.gameObject.AddComponent<LineRenderer>();
+                motion._lineRender = motion._charBody.gameObject.AddComponent<LineRenderer>();
             } else
             {
-                motion.lineRender = motion._charBody.GetComponent<LineRenderer>();
-                motion.lineRender.SetPosition(0, motion._charBody.transform.position);
-                motion.lineRender.SetPosition(1, motion._charBody.transform.position);
-		        motion.lineRender.positionCount = 2;
-		        motion.lineRender.startWidth = motion.lineRender.endWidth = 0.15f;
-		        motion.lineRender.material = new Material(Shader.Find("Sprites/Default"));
-		        motion.lineRender.startColor = motion.lineRender.endColor = Color.black;
+                motion._lineRender = motion._charBody.GetComponent<LineRenderer>();
+                motion._lineRender.SetPosition(0, motion._charBody.transform.position);
+                motion._lineRender.SetPosition(1, motion._charBody.transform.position);
+		        motion._lineRender.positionCount = 2;
+		        motion._lineRender.startWidth = motion._lineRender.endWidth = 0.15f;
+		        motion._lineRender.material = new Material(Shader.Find("Sprites/Default"));
+		        motion._lineRender.startColor = motion._lineRender.endColor = Color.black;
             }
 
             return motion;
         }
 
+        public override void UpdateInputs(InputState newInputs)
+        {
+            _inputs = newInputs;
+
+
+            if (_inputs.spaceSign > 0) {
+                Quaternion lookDirection =  Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up)
+                                            * Quaternion.AngleAxis(_inputs.mousePositionY, Vector3.right);
+                TryGrapple(lookDirection);
+            }
+            if (_inputs.spaceSign < 0) {
+                _grappleInfo.Reset();
+            }
+            if (_grappleInfo.isGrappled)
+            {
+                if (_inputs.spaceHeld > 0)
+                {
+                    _grappleInfo.length = Mathf.MoveTowards(_grappleInfo.length, 3, 0.1f);
+                }
+            }
+        }
+
         public override void BeginMotion(Vector3 oldVelocity)
         {
-            lineRender.positionCount = 2;
-            lineRender.enabled = true;
+            _lineRender.positionCount = 2;
+            _lineRender.enabled = true;
             _velocity = oldVelocity;
-            _charBody.useGravity = false;
+            _charBody.useGravity = true;
             _charBody.isKinematic = false;
         }
 
         public override void EndMotion()
         {
-            lineRender.enabled = false;
+            _lineRender.enabled = false;
         }
 
         public override void ProcessMotion()
         {
+            if (!_grappleInfo.isGrappled)
+                return;
+
             // RENDER GRAPPLE LINE
-            lineRender.SetPosition(1, grappleInfo.GetWorldPoint() );
-            lineRender.SetPosition(0, _charBody.transform.position);
+            _lineRender.SetPosition(1, _grappleInfo.GetWorldPoint() );
+            _lineRender.SetPosition(0, _charBody.transform.position);
 
 
             Quaternion lookRotation = Quaternion.Euler(_inputs.mousePositionY, _inputs.mousePositionX, 0);
-            Vector3 lookVector = Vector3.ProjectOnPlane(lookRotation * Vector3.forward, grappleInfo.GetFromTo(_charBody.transform.position)).normalized;
+            Vector3 lookVector = Vector3.ProjectOnPlane(lookRotation * Vector3.forward, _grappleInfo.GetFromTo(_charBody.transform.position)).normalized;
 
-            Vector3 grappleDirection = grappleInfo.GetFromTo(_charBody.transform.position).normalized;
-            float grappleRopeLength = grappleInfo.GetFromTo(_charBody.transform.position).magnitude;
+            Vector3 grappleDirection = _grappleInfo.GetFromTo(_charBody.transform.position).normalized;
+            float grappleRopeLength = _grappleInfo.GetFromTo(_charBody.transform.position).magnitude;
 
 
             // VELOCITY
-            if (grappleRopeLength > grappleInfo.length) 
+            if (grappleRopeLength > _grappleInfo.length) 
             {
-                Vector3 dampedVelocity = Vector3.Project(_charBody.velocity, grappleDirection);
-                _charBody.AddForce( -dampedVelocity * 0.9f * Time.deltaTime, ForceMode.VelocityChange);
+                //Vector3 dampedVelocity = Vector3.Project(_charBody.velocity, grappleDirection);
+                //_charBody.AddForce( -dampedVelocity * 0.9f * Time.deltaTime, ForceMode.VelocityChange);
 
-                float tensionCoefficient = 0.01f * Mathf.Pow(10, 9) / grappleInfo.length;
-                Vector3 ropeTension = (grappleDirection * (grappleRopeLength - grappleInfo.length)) * tensionCoefficient;
+                float tensionCoefficient = Mathf.Pow(10, 3) / _grappleInfo.length;
+                Vector3 ropeTension = (grappleDirection * (grappleRopeLength - _grappleInfo.length)) * tensionCoefficient;
                 _charBody.AddForce( ropeTension, ForceMode.Force);
+
+                _charBody.velocity = Vector3.ClampMagnitude(_charBody.velocity, Physics.gravity.y * 3);
 
                 /*_velocity = Vector3.ProjectOnPlane(_velocity + (Physics.gravity * 0.1f * Time.deltaTime), grappleDirection);
                 Quaternion angularVelocityRotation = Quaternion.AngleAxis(  grappleRopeLength * _velocity.magnitude / Mathf.Pow(grappleRopeLength, 2),
@@ -123,11 +156,8 @@ namespace CharMotions
                 _charBody.MovePosition( _charBody.transform.position + _velocity);*/
             } else 
             {
-                /*_velocity.x = Mathf.MoveTowards(_velocity.x, 0, 0.00035f );
-                _velocity.y = Mathf.MoveTowards(_velocity.y, Physics.gravity.y * 3, 0.0030f);
-                _velocity.z = Mathf.MoveTowards(_velocity.z, 0, 0.00035f );
-
-                _charBody.MovePosition( _charBody.transform.position + _velocity);*/
+                Vector3 dampedVelocity = _charBody.velocity * 0.1f;
+                _charBody.AddForce( -dampedVelocity, ForceMode.VelocityChange);
             }
 
             // ROTATION
@@ -140,8 +170,8 @@ namespace CharMotions
 
         public override Vector3 GetVelocity()
         {
-            lineRender.positionCount = 0;
-            return _velocity;
+            _lineRender.positionCount = 0;
+            return _charBody.velocity;
         }
 
 
@@ -152,23 +182,23 @@ namespace CharMotions
             if (Physics.Raycast(_charBody.transform.position, 
                                 direction * Vector3.forward,
                                 out rayHit, 
-                                MaxGrappleDistance) )
+                                _maxGrappleDistance) )
             {
-                grappleInfo.Set(rayHit);
+                _grappleInfo.Set(rayHit);
             } else 
             {
-                grappleInfo.Reset();
+                _grappleInfo.Reset();
             }
         }
 
         public void ResetGrapple()
         {
-            grappleInfo.Reset();
+            _grappleInfo.Reset();
         }
 
         public bool isGrappled()
         {
-            return grappleInfo.isGrappled;
+            return _grappleInfo.isGrappled;
         }
 
     }
