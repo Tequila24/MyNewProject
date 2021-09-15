@@ -95,8 +95,6 @@ public class CharController : MonoBehaviour
             _charMotions.Add(CharState.Grappling, GrappleMotion.Create(this.gameObject, _charBody, _charCollider));
 
         _charBody.velocity = Vector3.zero;
-
-        UpdateState();
     }
 
     void Update()

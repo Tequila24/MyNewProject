@@ -42,6 +42,11 @@ namespace CharMotions
             _velocity.y = Mathf.MoveTowards(_velocity.y, Physics.gravity.y * 3, 0.2f );
             _velocity.z = Mathf.MoveTowards(_velocity.z, step.z, 0.035f );
 
+            // remove part of velocity after hitting something
+            if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) )
+                    _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal);
+
+            // APPLY VELOCITY
             _charBody.velocity = _velocity;
             
             _charBody.angularVelocity = Vector3.MoveTowards(_charBody.angularVelocity, Vector3.zero, 0.001f);

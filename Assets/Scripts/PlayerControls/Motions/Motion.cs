@@ -10,12 +10,11 @@ namespace CharMotions
         protected InputState _inputs;
         [SerializeField]
         protected Vector3 _velocity = Vector3.zero;
-        [SerializeField]
+
 
         protected Rigidbody _charBody = null;
         protected Collider _charCollider = null;
-
-        protected Vector3 _contactNormal = Vector3.up;
+        protected Vector3 _contactNormal = Vector3.zero;
 
         public virtual void UpdateInputs(InputState newInputs)
         {

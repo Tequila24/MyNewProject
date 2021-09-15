@@ -76,6 +76,7 @@ namespace CharMotions
             Vector3 _heightAdjust = new Vector3(0, (_surfaceControl.contactPoint.y + _charCollider.bounds.extents.y * 1.2f) 
                                                 - _charBody.transform.position.y, 0) * 0.2f;
 
+            // APPLY VELOCITY
             _charBody.velocity = ( _heightAdjust
                                    + _surfaceControl.rotationToNormal * _velocity);
 
