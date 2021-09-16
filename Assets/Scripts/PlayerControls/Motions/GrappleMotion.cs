@@ -53,7 +53,12 @@ namespace CharMotions
         GrappleInfo _grappleInfo = new GrappleInfo();
 
         [SerializeField]
-        Vector3 accelerationVector;
+        bool IS_LONGER = false;
+        [SerializeField]
+        float LENGTH = 0;
+
+        [SerializeField]
+        float accelLength;
 
         public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider)
         {
@@ -121,6 +126,8 @@ namespace CharMotions
 
         public override void ProcessMotion()
         {
+            
+
             if (!_grappleInfo.isGrappled)
                 return;
 
@@ -137,67 +144,64 @@ namespace CharMotions
             {
                 _grappleInfo.length = Mathf.MoveTowards(_grappleInfo.length, 200, 10f * Time.deltaTime);
             }
+            
+            ProcessVelocity();
 
+            ProcessRotation();    
 
-            Quaternion lookRotation = Quaternion.Euler(_inputs.mousePositionY, _inputs.mousePositionX, 0);
-            Vector3 lookVector = Vector3.ProjectOnPlane(lookRotation * Vector3.forward, _grappleInfo.GetFromTo(_charBody.transform.position)).normalized;
+        }
 
-            Vector3 grappleDirection = _grappleInfo.GetFromTo(_charBody.transform.position).normalized;
-            float grappleRopeLength = _grappleInfo.GetFromTo(_charBody.transform.position).magnitude;
-
-
-            // VELOCITY
-            if (grappleRopeLength > _grappleInfo.length) 
-            {   
-                float lengthDelta = (grappleRopeLength - _grappleInfo.length);
-                float tensionCoefficient = 10000 / lengthDelta;
-                float forceAmount = tensionCoefficient * lengthDelta;
-                float accelerationAmount = forceAmount / _charBody.mass;
-                accelerationVector = grappleDirection * accelerationAmount;
-
-                _velocity += accelerationVector * Time.deltaTime;
-
-                /*float tensionCoefficient = Mathf.Pow(10, 3) / _grappleInfo.length;
-                Vector3 ropeTension = (grappleDirection * (grappleRopeLength - _grappleInfo.length)) * tensionCoefficient;
-                _charBody.AddForce( ropeTension, ForceMode.Force);*/
-
-                /*_velocity = Vector3.ProjectOnPlane(_velocity + (Physics.gravity * 0.1f * Time.deltaTime), grappleDirection);
-                Quaternion angularVelocityRotation = Quaternion.AngleAxis(  grappleRopeLength * _velocity.magnitude / Mathf.Pow(grappleRopeLength, 2),
-                                                                        Vector3.Cross(grappleDirection, _velocity)  );
-                _velocity = angularVelocityRotation * _velocity;
-                _velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.magnitude * 3);
-                _charBody.MovePosition( _charBody.transform.position + _velocity);*/
-                //_velocity -= _velocity * 0.01f;
-            } else 
+        private void ProcessVelocity()
+        {
+            //interpolate for 5 steps
+            int steps = 5;
+            float stepTime = Time.deltaTime/steps;
+            Vector3 newPosition = _charBody.transform.position + (_velocity * stepTime);
+            for (int cnt = 0; cnt < steps; cnt++)
             {
-                //Vector3 dampedVelocity = _charBody.velocity * 0.01f;
-                //_charBody.AddForce( -dampedVelocity, ForceMode.VelocityChange);
-                //_velocity -= _velocity * 0.01f;
+                Vector3 grappleDirection = _grappleInfo.GetFromTo(newPosition).normalized;
+                float grappleRopeLength = _grappleInfo.GetFromTo(newPosition).magnitude;
+                float lengthDelta = (grappleRopeLength - _grappleInfo.length);
+                LENGTH = lengthDelta;
+
+                if (lengthDelta > 0) {
+                    float tensionCoefficient = 10000 / lengthDelta;
+                    float forceAmount = tensionCoefficient * lengthDelta;
+                    float accelerationAmount = forceAmount / _charBody.mass;
+                    Vector3 accelerationVector = grappleDirection * accelerationAmount;
+                    _velocity += accelerationVector * stepTime;
+
+                } else
+                {
+                    
+                }
+
+                _velocity += Physics.gravity * stepTime;
+
+                // AIR DRAG
+                Vector3 airDragAcceleration = _velocity.normalized * ( 0.5f * ((_velocity.sqrMagnitude)/2)) / _charBody.mass;
+                _velocity -= airDragAcceleration * stepTime;
+
+                newPosition = newPosition + (_velocity * stepTime);
             }
-            // air drag
-            Vector3 airDragAcceleration = _velocity.normalized * ((_velocity.sqrMagnitude * 0.02f) / _charBody.mass);
-            _velocity -= airDragAcceleration;
-
-
-            _velocity += Physics.gravity * Time.deltaTime;
 
             // remove part of velocity after hitting something
             if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) )
                     _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal);
 
-            Debug.DrawRay(this.transform.position, _velocity, Color.yellow, Time.deltaTime);
+            //Debug.DrawRay(this.transform.position, _velocity, Color.yellow, Time.deltaTime);
 
-            //_velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.y * 3);
-            
             // APPLY VELOCITY
             _charBody.velocity = _velocity;
+        }
 
+        private void ProcessRotation()
+        {
             // ROTATION
             Quaternion lookDirection = Quaternion.Euler(0, _inputs.mousePositionX, 0);           // rotation to mouse look
             _charBody.MoveRotation( Quaternion.RotateTowards(   _charBody.transform.rotation,
                                                                 lookDirection,
                                                                 10.0f ) );
-
         }
 
         public override Vector3 GetVelocity()
