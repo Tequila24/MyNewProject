@@ -39,7 +39,7 @@ namespace CharMotions
             step =  mouseLookDirection * step;
 
             _velocity.x = Mathf.MoveTowards(_velocity.x, step.x, 0.035f );
-            _velocity.y = Mathf.MoveTowards(_velocity.y, Physics.gravity.y * 3, 0.2f );
+            _velocity.y = Mathf.MoveTowards(_velocity.y, Physics.gravity.y * 10, 0.2f );
             _velocity.z = Mathf.MoveTowards(_velocity.z, step.z, 0.035f );
 
             // remove part of velocity after hitting something
