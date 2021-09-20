@@ -134,6 +134,11 @@ public class CharController : MonoBehaviour
 
         _inputs.mousePositionX += _inputs.mouseDeltaX;
         _inputs.mousePositionY = Mathf.Clamp(_inputs.mousePositionY + _inputs.mouseDeltaY, -90, 90);
+
+        if (Input.GetKeyDown(KeyCode.R)) {
+            this.transform.position = new Vector3(0, 100, 0);
+            _charBody.velocity = Vector3.zero;
+        }
     }
 
     private void UpdateState()
@@ -151,6 +156,7 @@ public class CharController : MonoBehaviour
         isGrappled = (_charMotions[CharState.Grappling] as GrappleMotion).isGrappled();
 
 
+        // select current state based on state variables
         if (!isGrounded && !isGrappled)
             _currentState = CharState.Freefalling;
         else if (isGrounded && !isGrappled)
@@ -160,7 +166,7 @@ public class CharController : MonoBehaviour
 
         if (_previousState != _currentState)
         {
-            Debug.Log(_previousState + " => " + _currentState);
+            //Debug.Log(_previousState + " => " + _currentState);
             if (_charMotions.ContainsKey(_currentState))
                 if (_charMotions.ContainsKey(_previousState))   
                 {
