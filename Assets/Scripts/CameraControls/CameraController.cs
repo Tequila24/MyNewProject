@@ -32,7 +32,7 @@ public class CameraController : MonoBehaviour
         else
             worldPointLookAt = Vector3.Lerp(worldPointLookAt, _player.transform.position + _player.transform.forward * 10, 0.1f);
 
-        Debug.DrawLine(this.transform.position, worldPointLookAt, Color.red, Time.deltaTime);
+        //Debug.DrawLine(this.transform.position, worldPointLookAt, Color.red, Time.deltaTime);
         
         Quaternion cameraLookRotation = Quaternion.LookRotation(worldPointLookAt - this.transform.position, Vector3.up);
 

@@ -5,30 +5,65 @@ using UnityEngine;
 
 namespace CharMotions
 {
-    public struct GrappleInfo
+    public class GrappleInfo
     {
+        private float _maxLength = 200.0f;
+        public float maxLength
+        {
+            get { return _maxLength;}
+        }
+        private float _minLength = 1.0f;
+        public float minlength
+        {
+            get { return _minLength;}
+        }
+        private float _lengthLeft;
+        public float lengthLeft
+        {
+            get { return _lengthLeft;}
+        }
+        public int PointsCount
+        {
+            get { return linePoints.Count; }
+        }
+
         public GameObject grappledObject;
         public Rigidbody grappledRigidbody;
-        public Vector3 grapplePoint;
+        public List<Vector3> linePoints = new List<Vector3>();
+
+        public Vector3 Point
+        {
+            get { 
+                if (linePoints.Count > 0)
+                    return linePoints[0];
+                else
+                    return Vector3.zero; }
+        }
+        
         public Vector3 localGrapplePoint;
         public Vector3 toGrapplePoint;
         public float length;
         public bool isGrappled;
 
+        public GrappleInfo()
+        {
+            Reset();
+        }
+
         public void Set(RaycastHit rayHit)
         {
-            grapplePoint = rayHit.point;
+            AppendPoint(rayHit.point);
             grappledObject = rayHit.collider.gameObject;
-            localGrapplePoint = Quaternion.Inverse(grappledObject.transform.rotation) * (rayHit.point - grappledObject.transform.position);
-            grappledRigidbody = rayHit.collider.attachedRigidbody;
             length = rayHit.distance;
             isGrappled = true;
+
+            linePoints.Add(Point);
         }
 
         public Vector3 GetFromTo(Vector3 pointFrom)
         {
             if (isGrappled)
-                return (grapplePoint - pointFrom);
+                return (GetLastPoint() - pointFrom);
             else
                 return Vector3.zero;
         }
@@ -36,24 +71,54 @@ namespace CharMotions
         public void Reset()
         {
             grappledObject = null;
-            grapplePoint = Vector3.zero;
             localGrapplePoint = Vector3.zero;
             grappledRigidbody = null;
             length = 0;
             isGrappled = false;
+            _lengthLeft = _maxLength;
+
+            linePoints.Clear();
+        }
+
+        public Vector3[] GetPoints()
+        {
+            List<Vector3> reversed = new List<Vector3>(linePoints);
+            reversed.Reverse();
+            return linePoints.ToArray();
+        }
+
+        public Vector3 GetLastPoint()
+        {
+            if (linePoints.Count > 0)
+                return linePoints[linePoints.Count-1];
+            else
+                return Vector3.zero;
+        }
+
+        public void AppendPoint(Vector3 newPoint)
+        {
+            if (lengthLeft > minlength)
+            {
+                linePoints.Add(newPoint);
+                RecalculateLength();
+            }
+        }
+        
+        private void RecalculateLength()
+        {
+            float pointsDistance = 0;
+            for (int point_n = 0; point_n < (linePoints.Count-1); point_n++)
+            {
+                pointsDistance += (linePoints[point_n+1] - linePoints[point_n]).magnitude;
+            }
+            _lengthLeft = _maxLength - pointsDistance;
         }
     }
 
     public class GrappleMotion : CharMotions.Motion
     {
-        float _maxGrappleDistance = 200.0f;
-
-        private LineRenderer _lineRender = null;
-
-        GrappleInfo _grappleInfo = new GrappleInfo();
-
-        [SerializeField]
-        float accelLength;
+        GrappleInfo _grapple;
+        LineRenderer lineRend;
 
         public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider)
         {
@@ -63,21 +128,19 @@ namespace CharMotions
 
             motion._charBody = newCharBody;
             motion._charCollider = newCharCollider;
-
-
-
-            if (motion._charBody.GetComponent<LineRenderer>() == null) {
-                motion._lineRender = motion._charBody.gameObject.AddComponent<LineRenderer>();
+            
+            if (motion._charBody.GetComponent<LineRenderer>() == null) 
+            {
+                motion.lineRend = newParent.AddComponent<LineRenderer>();
             } else
             {
-                motion._lineRender = motion._charBody.GetComponent<LineRenderer>();
-                motion._lineRender.SetPosition(0, motion._charBody.transform.position);
-                motion._lineRender.SetPosition(1, motion._charBody.transform.position);
-		        motion._lineRender.positionCount = 2;
-		        motion._lineRender.startWidth = motion._lineRender.endWidth = 0.15f;
-		        motion._lineRender.material = new Material(Shader.Find("Sprites/Default"));
-		        motion._lineRender.startColor = motion._lineRender.endColor = Color.black;
+                motion.lineRend = newParent.GetComponent<LineRenderer>();
+		        motion.lineRend.startWidth = motion.lineRend.endWidth = 0.15f;
+		        motion.lineRend.material = new Material(Shader.Find("Sprites/Default"));
+		        motion.lineRend.startColor = motion.lineRend.endColor = Color.black;
             }
+
+            motion._grapple = new GrappleInfo();
 
             return motion;
         }
@@ -93,14 +156,12 @@ namespace CharMotions
                 TryGrapple(lookDirection);
             }
             if (_inputs.spaceSign < 0) {
-                _grappleInfo.Reset();
+                _grapple.Reset();
             }
         }
 
         public override void BeginMotion(Vector3 oldVelocity)
         {
-            _lineRender.positionCount = 2;
-            _lineRender.enabled = true;
             _velocity = oldVelocity;
             _charBody.useGravity = false;
             _charBody.isKinematic = false;
@@ -108,31 +169,54 @@ namespace CharMotions
 
         public override void EndMotion()
         {
-            _lineRender.enabled = false;
         }
 
         public override void ProcessMotion()
         {
-            
+            ProcessGrapple();
 
-            if (!_grappleInfo.isGrappled)
+            if (!_grapple.isGrappled)
                 return;
 
-            // RENDER GRAPPLE LINE
-            _lineRender.SetPosition(1, _grappleInfo.grapplePoint );
-            _lineRender.SetPosition(0, _charBody.transform.position);
-
-
-            // Retract or extend the rope
-            if (_inputs.forward > 0) 
-                _grappleInfo.length = Mathf.MoveTowards(_grappleInfo.length, 1, 200f * Time.deltaTime);
-            else if (_inputs.backward > 0) 
-                _grappleInfo.length = Mathf.MoveTowards(_grappleInfo.length, 200, -Physics.gravity.y * Time.deltaTime);
-            
             ProcessVelocity();
 
             ProcessRotation();    
+        }
 
+        private void ProcessGrapple()
+        {
+            // check if grappled object exists
+            if (_grapple.grappledObject == null) 
+            {
+                _grapple.Reset();
+                return;
+            }
+
+            // Retract or extend the rope
+            if (_inputs.forward > 0) 
+                _grapple.length = Mathf.MoveTowards(_grapple.length, 1, 30f * Time.deltaTime);
+            else if (_inputs.backward > 0) 
+                _grapple.length = Mathf.MoveTowards(_grapple.length, 200, -Physics.gravity.y * Time.deltaTime);
+                
+
+            // cast ray between Point and character
+            RaycastHit hit;
+            if (Physics.Linecast(_charBody.position, _grapple.GetLastPoint(), out hit)) 
+            {
+                if (Vector3.Distance(hit.point, _grapple.GetLastPoint()) > 0.1f)
+                    _grapple.AppendPoint(hit.point);
+
+                    lineRend.positionCount = _grapple.PointsCount;
+                    lineRend.SetPositions(_grapple.GetPoints());
+                    lineRend.positionCount += 1;
+            }
+            lineRend.SetPosition(lineRend.positionCount-1, this.transform.position);
+
+            for (int point_n = 0; point_n < _grapple.PointsCount-1; point_n++)
+            {
+                Debug.DrawLine(_grapple.linePoints[point_n], _grapple.linePoints[point_n+1], Color.yellow, Time.deltaTime);    
+            }
+            Debug.DrawLine(_grapple.GetLastPoint(), this.transform.position, Color.yellow, Time.deltaTime);
         }
 
         private void ProcessVelocity()
@@ -142,20 +226,19 @@ namespace CharMotions
             Vector3 lookDirection = charLookRotation * Vector3.forward * _velocity.sqrMagnitude * 15f;
 
             // GRAPPLE ROPE PHYSICS Interpolate for 5 steps
-            int steps = 5;
+            int steps = 1;
             float stepTime = Time.deltaTime/steps;
             Vector3 newPosition = _charBody.transform.position + (_velocity * stepTime);
             for (int cnt = 0; cnt < steps; cnt++)
             {
-                Vector3 grappleDirection = _grappleInfo.GetFromTo(newPosition).normalized;
-                float grappleRopeLength = _grappleInfo.GetFromTo(newPosition).magnitude;
-                float lengthDelta = grappleRopeLength - _grappleInfo.length;
+                Vector3 grappleDirection = _grapple.GetFromTo(newPosition).normalized;
+                float grappleRopeLength = _grapple.GetFromTo(newPosition).magnitude;
+                float lengthDelta = grappleRopeLength - _grapple.length;
 
                 if (lengthDelta > 0) {
                     float tensionCoefficient = 30000 / lengthDelta;
                     float forceAmount = tensionCoefficient * lengthDelta;
-                    float accelerationAmount = Mathf.Clamp(forceAmount / _charBody.mass, 0, 60);
-                    accelLength = accelerationAmount;
+                    float accelerationAmount = Mathf.Clamp(forceAmount / _charBody.mass, 0, 30);
                     Vector3 accelerationVector = grappleDirection * accelerationAmount;
                     _velocity += accelerationVector * stepTime;
                     
@@ -202,7 +285,6 @@ namespace CharMotions
 
         public override Vector3 GetVelocity()
         {
-            _lineRender.positionCount = 0;
             return _charBody.velocity;
         }
 
@@ -214,23 +296,23 @@ namespace CharMotions
             if (Physics.Raycast(_charBody.transform.position, 
                                 direction * Vector3.forward,
                                 out rayHit, 
-                                _maxGrappleDistance) )
+                                _grapple.maxLength) )
             {
-                _grappleInfo.Set(rayHit);
+                _grapple.Set(rayHit);
             } else 
             {
-                _grappleInfo.Reset();
+                _grapple.Reset();
             }
         }
 
         public void ResetGrapple()
         {
-            _grappleInfo.Reset();
+            _grapple.Reset();
         }
 
         public bool isGrappled()
         {
-            return _grappleInfo.isGrappled;
+            return _grapple.isGrappled;
         }
 
     }
