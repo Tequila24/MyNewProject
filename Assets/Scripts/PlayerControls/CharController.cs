@@ -34,6 +34,8 @@ public enum CharState
 
         public float mousePositionX;
         public float mousePositionY;
+
+        public Quaternion lookDirection;
     };
 
 
@@ -100,7 +102,7 @@ public class CharController : MonoBehaviour
     void Update()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        UpdateInputs();
+        ReadInputs();
         UpdateState();
 
         foreach (CharMotions.Motion motion in _charMotions.Values)
@@ -109,7 +111,7 @@ public class CharController : MonoBehaviour
         }
     }
 
-    public void UpdateInputs()
+    public void ReadInputs()
     {
         _inputs.forward = Input.GetKey(KeyCode.W) ? 1 : 0;
         _inputs.backward = Input.GetKey(KeyCode.S) ? 1 : 0;
@@ -139,6 +141,11 @@ public class CharController : MonoBehaviour
             this.transform.position = new Vector3(0, 100, 0);
             _charBody.velocity = Vector3.zero;
         }
+
+         _inputs.lookDirection =    Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up)
+                                    * Quaternion.AngleAxis(_inputs.mousePositionY, Vector3.right);
+
+
     }
 
     private void UpdateState()
@@ -153,7 +160,7 @@ public class CharController : MonoBehaviour
             isGrounded = true;
 
         // check is grappled
-        isGrappled = (_charMotions[CharState.Grappling] as GrappleMotion).isGrappled();
+        isGrappled = (_charMotions[CharState.Grappling] as GrappleMotion).isGrappled;
 
 
         // select current state based on state variables
