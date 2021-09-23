@@ -84,6 +84,7 @@ namespace CharMotions
                         if (Vector3.Angle(_velocity, _contactNormal) > 90)
                             _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal); 
             */
+            //Debug.Log("HIT " + hit.gameObject.name);
         }
 
         void OnCollisionStay(Collision hit)
@@ -104,6 +105,7 @@ namespace CharMotions
         void OnCollisionExit(Collision hit)
         {
             _contactNormal = Vector3.zero;
+            //Debug.Log("UNHIT " + hit.gameObject.name);
         }
     }
 

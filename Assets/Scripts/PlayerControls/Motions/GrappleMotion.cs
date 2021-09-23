@@ -55,15 +55,15 @@ namespace CharMotions
         }
 
         public override void ProcessMotion()
-        {
-            ProcessGrapple();
-            
+        {            
             if (!_grapple.isGrappled)
                 return;
 
             ProcessVelocity();
 
-            ProcessRotation();    
+            ProcessRotation();
+
+            ProcessGrapple();
         }
 
         private void ProcessGrapple()
@@ -80,15 +80,13 @@ namespace CharMotions
                 _grapple.Retract();
             else if (_inputs.backward > 0) 
                 _grapple.Extend();
-                
+
             _grapple.UpdateLine(this.transform.position);
         }
 
         private void ProcessVelocity()
         {
-            Quaternion charLookRotation =   Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up)
-                                            * Quaternion.AngleAxis(_inputs.mousePositionY, Vector3.right);
-            Vector3 lookDirection = charLookRotation * Vector3.forward * _velocity.sqrMagnitude * 100f;
+            Vector3 lookDirection = _inputs.lookDirection * Vector3.forward * _velocity.sqrMagnitude * 0.5f;
 
             // GRAPPLE ROPE PHYSICS Interpolate for 5 steps
             int steps = 10;
@@ -125,16 +123,15 @@ namespace CharMotions
             }
 
             // remove part of velocity after hitting something
-            if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) ) {
-                    _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal);
-                    _velocity -= _velocity * 0.01f;
+            if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) ) 
+            {
+                //Debug.Log("CONTACT" + _contactNormal);
+                _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal);
+                _velocity -= _velocity * 0.01f;
             }
 
             // APPLY VELOCITY
-            _charBody.velocity = _velocity + lookDirection * Time.deltaTime;
-
-            // CLAMP?
-            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 50);
+            _charBody.velocity = Vector3.ClampMagnitude(_velocity + lookDirection * Time.deltaTime, Physics.gravity.sqrMagnitude * 50);
         }
 
         private void ProcessRotation()

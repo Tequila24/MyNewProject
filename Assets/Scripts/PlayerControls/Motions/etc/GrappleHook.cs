@@ -6,7 +6,7 @@ namespace CharMotions
 {        
     public class GrappleHook
     {
-        private float _maxLength = 200.0f;
+        private float _maxLength = 400.0f;
         private float _minLength = 1.0f;
 
         private float _lengthCurrent;
@@ -44,6 +44,7 @@ namespace CharMotions
 		        _lineRenderer.startWidth = _lineRenderer.endWidth = 0.15f;
 		        _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
 		        _lineRenderer.startColor = _lineRenderer.endColor = Color.black;
+                _lineRenderer.positionCount = 1;
             }
         }
 
@@ -57,7 +58,7 @@ namespace CharMotions
         public void Extend()
         {
             // TO DO
-            _lengthCurrent = Mathf.MoveTowards(_lengthCurrent, _maxLength, -Physics.gravity.y * Time.deltaTime);            
+            _lengthCurrent = Mathf.MoveTowards(_lengthCurrent, _maxLength, 50.0f * Time.deltaTime);            
         }
 
         public void Set(RaycastHit rayHit)
@@ -121,36 +122,52 @@ namespace CharMotions
             RaycastHit hit;
             if (Physics.Linecast(characterPosition, _linePoints[_linePoints.Count-1], out hit)) 
             {
-                Vector3 wrapPoint = hit.point + hit.normal.normalized * 0.05f;
-                if (Vector3.Distance(wrapPoint, _linePoints[_linePoints.Count-1]) > 0.1f) 
+                if (Vector3.Distance(hit.point, _linePoints[_linePoints.Count-1]) > 0.1f) 
                 {
+                    Vector3 toOriginalPoint = _linePoints[_linePoints.Count-1] - hit.point;
+                    Vector3 toChar = characterPosition - hit.point;
+                    Vector3 gapVector = /*( (hit.normal * 0.1f) + */((toOriginalPoint + toChar).normalized * 0.02f);
+                    Vector3 wrapPoint = hit.point + gapVector;
+
                     _linePoints.Add(wrapPoint);
                     _lineRenderer.positionCount += 1;
                     _lineRenderer.SetPosition(_lineRenderer.positionCount-2, wrapPoint);
+
+                    Debug.DrawRay(hit.point, toOriginalPoint, Color.yellow, 10);
+                    Debug.DrawRay(hit.point, toChar, Color.yellow, 10);
+                    Debug.DrawRay(hit.point, gapVector, Color.red, 10);
                 }
             }
 
 
             // cast ray between point before last and character
             // to unstuck the rope
-            if (_linePoints.Count > 2)
+            if (_linePoints.Count > 1)
             {
-                Debug.DrawLine(characterPosition, _linePoints[_linePoints.Count-2], Color.green, Time.deltaTime);
-                if ( !(Physics.Linecast(characterPosition, _linePoints[_linePoints.Count-2], out hit)) ) 
+                RaycastHit unstuckHit;
+                if ( !(Physics.Linecast(characterPosition, _linePoints[_linePoints.Count-2], out unstuckHit)) )
                 {
                     _linePoints.RemoveAt(_linePoints.Count-1);
                     _lineRenderer.positionCount -= 1;
+                } else 
+                {
+                    if (Vector3.Distance(unstuckHit.point, _linePoints[_linePoints.Count-2]) < 0.05f)
+                    {
+                        _linePoints.RemoveAt(_linePoints.Count-1);
+                        _lineRenderer.positionCount -= 1;
+                    }
                 }
             }
 
             _lineRenderer.SetPosition(_lineRenderer.positionCount-1, characterPosition);
 
             // DEBUG
-            for (int point_n = 0; point_n < _linePoints.Count-1; point_n++)
+            for (int point_n = 0; point_n < _linePoints.Count; point_n++)
             {
-                Debug.DrawLine(_linePoints[point_n], _linePoints[point_n+1], Color.yellow, Time.deltaTime);    
+                //Debug.DrawLine(_linePoints[point_n], _linePoints[point_n+1], Color.yellow, Time.deltaTime);    
+                Debug.DrawLine(new Vector3(0, 0, 0), _linePoints[point_n], Color.magenta, Time.deltaTime);
             }
-            Debug.DrawLine(_linePoints[_linePoints.Count-1], characterPosition, Color.yellow, Time.deltaTime);
+            //Debug.DrawLine(_linePoints[_linePoints.Count-1], characterPosition, Color.yellow, Time.deltaTime);
 
             RecalculateLength();
         }

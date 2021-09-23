@@ -76,7 +76,7 @@ namespace CharMotions
             float distance = _charCollider.bounds.size.y * 2;
             Transform parent = this.transform;
 
-            Debug.DrawRay(  rayPosition, rayDirection.normalized * distance, Color.red, Time.deltaTime);
+            //Debug.DrawRay(  rayPosition, rayDirection.normalized * distance, Color.red, Time.deltaTime);
             
             RaycastHit surfaceRay;
             if (Physics.Raycast(    rayPosition, rayDirection, out surfaceRay, distance) ) {

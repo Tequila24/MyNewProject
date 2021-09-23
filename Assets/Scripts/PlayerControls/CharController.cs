@@ -62,7 +62,9 @@ public class CharController : MonoBehaviour
 
     private Dictionary<CharState, CharMotions.Motion> _charMotions = new Dictionary<CharState, CharMotions.Motion>();
 
-    
+
+
+
     void OnValidate()
     {
         Init();
@@ -203,5 +205,13 @@ public class CharController : MonoBehaviour
             lookPoint = lookHit.point;
         else
             lookPoint = this.transform.position + lookRotation * Vector3.forward * 10;*/
+    }
+
+    public float GetVelocity()
+    {
+        if (_charMotions.ContainsKey(_currentState))
+            return _charMotions[_currentState].GetVelocity().magnitude;
+        else
+            return 0;
     }
 }
