@@ -6,7 +6,7 @@ namespace CharMotions
 {        
     public class GrappleHook
     {
-        private float _maxLength = 400.0f;
+        private float _maxLength = 200.0f;
         private float _minLength = 1.0f;
 
         private float _lengthCurrent;
@@ -101,14 +101,20 @@ namespace CharMotions
             _lengthLeft = _lengthCurrent - _lengthWrapped;
         }
 
+        public bool IsCanReach(Vector3 fromPosition, Quaternion lookDirection, out RaycastHit hit)
+        {
+            return Physics.Raycast(fromPosition, lookDirection * Vector3.forward, out hit, _maxLength);
+        }
+
+        public bool IsCanReach(Vector3 fromPosition, Quaternion lookDirection)
+        {
+            return Physics.Raycast(fromPosition, lookDirection * Vector3.forward, _maxLength);
+        }
+
         public void TryGrappleFromTo(Vector3 fromPosition, Quaternion lookDirection)
         {
             RaycastHit rayHit;
-
-            if (Physics.Raycast(fromPosition, 
-                                lookDirection * Vector3.forward,
-                                out rayHit, 
-                                _maxLength) )
+            if (IsCanReach(fromPosition, lookDirection, out rayHit))
                 Set(rayHit);
             else 
                 Reset();
@@ -158,14 +164,13 @@ namespace CharMotions
                     }
                 }
             }
-
             _lineRenderer.SetPosition(_lineRenderer.positionCount-1, characterPosition);
 
             // DEBUG
             for (int point_n = 0; point_n < _linePoints.Count; point_n++)
             {
                 //Debug.DrawLine(_linePoints[point_n], _linePoints[point_n+1], Color.yellow, Time.deltaTime);    
-                Debug.DrawLine(new Vector3(0, 0, 0), _linePoints[point_n], Color.magenta, Time.deltaTime);
+                //Debug.DrawLine(new Vector3(0, 0, 0), _linePoints[point_n], Color.magenta, Time.deltaTime);
             }
             //Debug.DrawLine(_linePoints[_linePoints.Count-1], characterPosition, Color.yellow, Time.deltaTime);
 

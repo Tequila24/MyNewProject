@@ -16,6 +16,8 @@ namespace CharMotions
         protected Collider _charCollider = null;
         protected Vector3 _contactNormal = Vector3.zero;
 
+        protected CrosshairController _csControl = null;
+
         public virtual void UpdateInputs(InputState newInputs)
         {
             _inputs = newInputs;
@@ -64,12 +66,6 @@ namespace CharMotions
             Physics.Raycast(_charCollider.transform.position, _velocity, out hit);
             return hit.distance;
         }
-
-
-        protected void FixedUpdate()
-        {
-        }
-
 
         void OnCollisionEnter(Collision hit)
         {

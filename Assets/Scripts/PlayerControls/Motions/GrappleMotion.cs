@@ -26,6 +26,8 @@ namespace CharMotions
 
             motion._grapple = new GrappleHook(newParent);
 
+            motion._csControl = GameObject.Find("Canvas").GetComponent<CrosshairController>();
+
             return motion;
         }
 
@@ -33,13 +35,14 @@ namespace CharMotions
         {
             _inputs = newInputs;
 
-
             if (_inputs.spaceSign > 0) {
-                TryGrapple();
+                _grapple.TryGrappleFromTo(_charBody.transform.position, _inputs.lookDirection);
             }
             if (_inputs.spaceSign < 0) {
                 _grapple.Reset();
             }
+
+            ProcessGrapple();
         }
 
         public override void BeginMotion(Vector3 oldVelocity)
@@ -55,7 +58,7 @@ namespace CharMotions
         }
 
         public override void ProcessMotion()
-        {            
+        {
             if (!_grapple.isGrappled)
                 return;
 
@@ -68,6 +71,15 @@ namespace CharMotions
 
         private void ProcessGrapple()
         {
+            RaycastHit aimPointHit;
+            bool canReach = _grapple.IsCanReach(_charBody.transform.position, _inputs.lookDirection, out aimPointHit);
+
+            _csControl.SetCrosshairColor(canReach);
+            if (canReach)
+                _csControl.UpdateCrosshairPosition(aimPointHit.point);
+            else
+                _csControl.UpdateCrosshairPosition(Vector3.negativeInfinity);
+
             // check if grappled object exists
             if (_grapple._grappledObject == null) 
             {
@@ -146,13 +158,7 @@ namespace CharMotions
         public override Vector3 GetVelocity()
         {
             return _charBody.velocity;
-        }
-
-        public void TryGrapple()
-        {
-            _grapple.TryGrappleFromTo(_charBody.transform.position, _inputs.lookDirection);
-        }
-        
+        }        
 
     }
 }
