@@ -48,8 +48,6 @@ namespace CharMotions
             get { return _isGrappled ;}
         }
 
-        public GameObject _grappledObject;
-        public Rigidbody _grappledRigidbody;
         private List<LinePoint> _linePoints = new List<LinePoint>();
         private LineRenderer _lineRenderer;
 
@@ -70,14 +68,12 @@ namespace CharMotions
 
         public void Retract()
         {
-            // TO DO
             if (_lengthLeft > _minLength)
                 _lengthCurrent = Mathf.MoveTowards(_lengthCurrent, _minLength, 50.0f * Time.deltaTime);
         }
 
         public void Extend()
         {
-            // TO DO
             _lengthCurrent = Mathf.MoveTowards(_lengthCurrent, _maxLength, 50.0f * Time.deltaTime);            
         }
 
@@ -86,6 +82,7 @@ namespace CharMotions
             _lengthCurrent = _minLength;
             _lengthWrapped = 0.0f;
             _linePoints.Clear();
+            _lineRenderer.positionCount = 0;
 
             _isGrappled = false;
         }
@@ -93,7 +90,7 @@ namespace CharMotions
         public Vector3 GetFromTo(Vector3 pointFrom)
         {
             if (_isGrappled)
-                return ( (_linePoints[_linePoints.Count-1]).GetWorldPoint() - pointFrom);
+                return ( (_linePoints[_linePoints.Count-1]).GetWorldPoint() - pointFrom );
             else
                 return Vector3.zero;
         }
@@ -113,7 +110,7 @@ namespace CharMotions
 
         public bool IsCanReach(Vector3 fromPosition, Quaternion lookDirection)
         {
-            return Physics.Raycast(fromPosition, lookDirection * Vector3.forward, _maxLength, 0);
+            return Physics.Raycast(fromPosition, lookDirection * Vector3.forward, _maxLength, 1, 0);
         }
 
         public void TryGrappleFromTo(Vector3 fromPosition, Quaternion lookDirection)
@@ -131,7 +128,6 @@ namespace CharMotions
 
         public void UpdateLine(Vector3 characterPosition)
         {
-
             // cast ray between last point and character
             RaycastHit hit;
             if (Physics.Linecast(characterPosition, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 

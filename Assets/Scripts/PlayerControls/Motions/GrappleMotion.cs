@@ -80,12 +80,8 @@ namespace CharMotions
             else
                 _csControl.UpdateCrosshairPosition(Vector3.negativeInfinity);
 
-            // check if grappled object exists
-            if (_grapple._grappledObject == null) 
-            {
-                _grapple.Reset();
+            if (!_grapple.isGrappled)
                 return;
-            }
 
             // Retract or extend the rope
             if (_inputs.forward > 0) 
@@ -98,8 +94,6 @@ namespace CharMotions
 
         private void ProcessVelocity()
         {
-            Vector3 lookDirection = _inputs.lookDirection * Vector3.forward * _velocity.sqrMagnitude * 0.5f;
-
             // GRAPPLE ROPE PHYSICS Interpolate for 5 steps
             int steps = 10;
             float stepTime = Time.deltaTime/steps;
@@ -113,7 +107,7 @@ namespace CharMotions
                 if (lengthDelta > 0) {
                     float tensionCoefficient = 30000 / lengthDelta;
                     float forceAmount = tensionCoefficient * lengthDelta;
-                    float accelerationAmount = Mathf.Clamp(forceAmount / _charBody.mass, 0, 30);
+                    float accelerationAmount = Mathf.Clamp(forceAmount / _charBody.mass, 0, 60);
                     Vector3 accelerationVector = grappleDirection * accelerationAmount;
                     _velocity += accelerationVector * stepTime;
                     
@@ -142,8 +136,11 @@ namespace CharMotions
                 _velocity -= _velocity * 0.01f;
             }
 
+            // NEEDS TWEAKING
+            //Vector3 lookDirection = _inputs.lookDirection * Vector3.forward * _velocity.sqrMagnitude * 0.5f;
+
             // APPLY VELOCITY
-            _charBody.velocity = Vector3.ClampMagnitude(_velocity + lookDirection * Time.deltaTime, Physics.gravity.sqrMagnitude * 50);
+            _charBody.velocity = Vector3.ClampMagnitude(_velocity /*+ lookDirection * Time.deltaTime*/, Physics.gravity.sqrMagnitude * 50);
         }
 
         private void ProcessRotation()
