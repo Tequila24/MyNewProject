@@ -28,19 +28,16 @@ namespace CharMotions
 
         public override void ProcessMotion()
         {
-            Quaternion mouseLookDirection = Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up);
+            Quaternion yawLookDirection = Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up);
 
             // create step based on inputs
             Vector3 step = new Vector3( _inputs.right - _inputs.left,
                                         0,
                                         _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? 10f : 7f);
+            Vector3 freeFallAcceleration = Physics.gravity;
+            Vector3 stepAcceleration = yawLookDirection * step;
 
-            // rotate step to follow look direction
-            step =  mouseLookDirection * step;
-
-            _velocity.x = Mathf.MoveTowards(_velocity.x, step.x, 0.035f );
-            _velocity.y = Mathf.MoveTowards(_velocity.y, Physics.gravity.y * 10, 0.2f );
-            _velocity.z = Mathf.MoveTowards(_velocity.z, step.z, 0.035f );
+            _velocity += (freeFallAcceleration + stepAcceleration) * Time.deltaTime;
 
             // remove part of velocity after hitting something
             if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) )

@@ -2263,52 +2263,52 @@ PrefabInstance:
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 132.7667
+      value: 9.6
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.3997574
+      value: -0.4
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -192.0572
+      value: -203.4
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.78326935
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.017823046
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.6210055
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.0228856
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 3.2300003
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 76.795006
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 36202510591309536, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: -0.78700006
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 849857966276734042, guid: 11e3806aef23a7046992ad06b86d19ad,
         type: 3}
@@ -2875,6 +2875,40 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 956957056}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!21 &960876965
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Sprites/Default
+  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AlphaTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - PixelSnap: 0
+    - _EnableExternalAlpha: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -4895,6 +4929,25 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1562502707}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1573419935 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 849857966276734042, guid: 11e3806aef23a7046992ad06b86d19ad,
+    type: 3}
+  m_PrefabInstance: {fileID: 837945867}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1573419941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1573419935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d787f5c30c7d8494c85951bfdac14c0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _rotation_velocity: 0
 --- !u!1 &1588735740
 GameObject:
   m_ObjectHideFlags: 0
@@ -6305,40 +6358,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1825557205}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!21 &1825718681
-Material:
-  serializedVersion: 6
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Sprites/Default
-  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _AlphaTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Floats:
-    - PixelSnap: 0
-    - _EnableExternalAlpha: 0
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Flip: {r: 1, g: 1, b: 1, a: 1}
-    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1826346777
 GameObject:
   m_ObjectHideFlags: 0
@@ -6731,7 +6750,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1825718681}
+  - {fileID: 960876965}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
