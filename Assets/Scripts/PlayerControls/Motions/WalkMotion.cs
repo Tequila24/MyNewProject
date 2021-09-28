@@ -55,9 +55,9 @@ namespace CharMotions
                 Quaternion mouseLookDirection = Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up);
 
                 // create step based on inputs
-                Vector3 step = new Vector3( _inputs.right - _inputs.left,
+                Vector3 step = new Vector3( _inputs.right.state - _inputs.left.state,
                                             0,
-                                            _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? 10f : 7f);
+                                            _inputs.forward.state - _inputs.backward.state ).normalized * ((_inputs.shift.state > 0) ? 10f : 7f);
                 // rotate step to follow look direction
                 step =  mouseLookDirection * step;
                 //
