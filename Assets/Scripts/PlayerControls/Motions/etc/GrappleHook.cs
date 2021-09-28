@@ -25,7 +25,15 @@ namespace CharMotions
 
             public Vector3 GetWorldPoint()
             {
-                return transform.TransformPoint(localPoint);
+                if (Exists())
+                    return transform.TransformPoint(localPoint);
+                else
+                    return Vector3.zero;
+            }
+
+            public bool Exists()
+            {
+                return (transform == null) ? false : true;
             }
         }
 
@@ -128,6 +136,18 @@ namespace CharMotions
 
         public void UpdateLine(Vector3 characterPosition)
         {
+            //check if wrapped objects exist
+            for (int point_n = 0; point_n < _linePoints.Count; point_n++)
+            {
+                if (!_linePoints[point_n].Exists())
+                    _linePoints.RemoveAt(point_n);
+            }
+            if (_linePoints.Count == 0)
+            {
+                this.Reset();
+                return;
+            }
+
             // cast ray between last point and character
             RaycastHit hit;
             if (Physics.Linecast(characterPosition, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
@@ -158,17 +178,19 @@ namespace CharMotions
                     _linePoints.RemoveAt(_linePoints.Count-1);
                 } else 
                 {
-                    if (Vector3.Distance(unstuckHit.point, _linePoints[_linePoints.Count-2].GetWorldPoint()) < 0.05f)
+                    if (Vector3.Distance(unstuckHit.point, _linePoints[_linePoints.Count-2].GetWorldPoint()) < 0.1f)
                     {
                         _linePoints.RemoveAt(_linePoints.Count-1);
                     }
                 }
             }
 
-
-            _lineRenderer.positionCount = _linePoints.Count + 1;
-            for (int point_n = 0; point_n < _linePoints.Count; point_n++)
+            _lineRenderer.positionCount = 1;
+            for (int point_n = 0; point_n < _linePoints.Count; point_n++) 
+            {
                 _lineRenderer.SetPosition(point_n, _linePoints[point_n].GetWorldPoint());
+                _lineRenderer.positionCount++;
+            }
             _lineRenderer.SetPosition(_lineRenderer.positionCount-1, characterPosition);
 
 
@@ -185,5 +207,7 @@ namespace CharMotions
 
             RecalculateLength();
         }
+
+
     }
 }
