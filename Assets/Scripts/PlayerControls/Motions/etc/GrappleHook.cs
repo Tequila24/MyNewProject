@@ -85,6 +85,11 @@ namespace CharMotions
             _lengthCurrent = Mathf.MoveTowards(_lengthCurrent, _maxLength, 50.0f * Time.deltaTime);            
         }
 
+        public void SetNewLength(float newLength)
+        {
+            _lengthCurrent = newLength + _lengthWrapped;
+        }
+
         public void Reset()
         {
             _lengthCurrent = _minLength;

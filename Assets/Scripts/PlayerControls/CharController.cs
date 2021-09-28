@@ -61,9 +61,7 @@ public struct InputState
     public KeyState shift;
 
     public KeyState mouse1;
-    public KeyState mouse1Sign;
     public KeyState mouse2;
-    public KeyState mouse2Sign;
 
     public float mouseDeltaX;
     public float mouseDeltaY;
@@ -142,13 +140,17 @@ public class CharController : MonoBehaviour
     void Update()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        ReadInputs();
         UpdateState();
 
         foreach (CharMotions.Motion motion in _charMotions.Values)
         {
             motion.UpdateInputs(_inputs);
         }
+    }
+
+    void OnGUI() 
+    {
+        ReadInputs();
     }
 
     public void ReadInputs()
