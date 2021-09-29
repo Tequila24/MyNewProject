@@ -26,14 +26,18 @@ namespace CharMotions
             _charBody.useGravity = false;
         }
 
+        public override void EndMotion()
+        {
+        }
+
         public override void ProcessMotion()
         {
             Quaternion yawLookDirection = Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up);
 
             // create step based on inputs
-            Vector3 step = new Vector3( _inputs.right.state - _inputs.left.state,
+            Vector3 step = new Vector3( _inputs.right - _inputs.left,
                                         0,
-                                        _inputs.forward.state - _inputs.backward.state ).normalized * ((_inputs.shift.state > 0) ? 10f : 7f);
+                                        _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? 10f : 7f);
             Vector3 freeFallAcceleration = Physics.gravity;
             Vector3 stepAcceleration = yawLookDirection * step;
 

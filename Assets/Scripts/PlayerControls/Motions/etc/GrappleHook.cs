@@ -56,6 +56,9 @@ namespace CharMotions
             get { return _isGrappled ;}
         }
 
+        private int _winchDirection;
+        public int winchDirection { get { return _winchDirection; } }
+
         private List<LinePoint> _linePoints = new List<LinePoint>();
         private LineRenderer _lineRenderer;
 
@@ -74,15 +77,21 @@ namespace CharMotions
             }
         }
 
-        public void Retract()
+        public void RetractWinch()
         {
             if (_lengthLeft > _minLength)
-                _lengthCurrent = Mathf.MoveTowards(_lengthCurrent, _minLength, 50.0f * Time.deltaTime);
+                _winchDirection = -1;
         }
 
-        public void Extend()
+        public void ExtendWinch()
         {
-            _lengthCurrent = Mathf.MoveTowards(_lengthCurrent, _maxLength, 50.0f * Time.deltaTime);            
+            if (_lengthLeft < _maxLength)
+                _winchDirection = 1;
+        }
+
+        public void StopWinch()
+        {
+            _winchDirection = 0;
         }
 
         public void SetNewLength(float newLength)

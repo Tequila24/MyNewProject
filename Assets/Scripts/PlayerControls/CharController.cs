@@ -14,69 +14,9 @@ public enum CharState
     Flying
 }
 
-public struct KeyState
-{
-    private bool _isPressed;
-    public bool isPressed
-    {
-        get { return _isPressed; }
-    }
-    private bool _isLifted;
-    public bool isLifted
-    {
-        get { return _isLifted; }
-    }
-    private bool _isHeld;
-    public bool isHeld
-    {
-        get { return _isHeld; }
-    }
 
-    private int _state;
-    public int state
-    {
-        get { return _state; }
-    }
-
-    public void Update(KeyCode code)
-    {
-        _isPressed = Input.GetKeyDown(code);
-        _isLifted = Input.GetKeyUp(code);
-        _isHeld = Input.GetKey(code);
-
-        _state = isHeld ? 1 : 0;
-    }
-}
-
-public struct InputState
-{
-    public KeyState forward;
-    public KeyState backward;
-    public KeyState left;
-    public KeyState right;
-    
-    public KeyState spaceHeld;
-    public KeyState spaceSign;
-
-    public KeyState shift;
-
-    public KeyState mouse1;
-    public KeyState mouse2;
-
-    public float mouseDeltaX;
-    public float mouseDeltaY;
-
-    public float mousePositionX;
-    public float mousePositionY;
-
-    public Quaternion lookDirection;
-};
-
-    
-
-
-    [RequireComponent(typeof(Rigidbody))]
-    [RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Collider))]
 
 
 public class CharController : MonoBehaviour
@@ -84,13 +24,6 @@ public class CharController : MonoBehaviour
     private Rigidbody _charBody;
     private Collider _charCollider;
     private SurfaceController _surfaceControl;
-
-    [SerializeField]
-    private InputState _inputs;
-    public ref InputState inputs
-    {
-        get { return ref _inputs;}
-    }
 
     [SerializeField]
     private CharState _currentState;
@@ -141,47 +74,6 @@ public class CharController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         UpdateState();
-
-        foreach (CharMotions.Motion motion in _charMotions.Values)
-        {
-            motion.UpdateInputs(_inputs);
-        }
-    }
-
-    void OnGUI() 
-    {
-        ReadInputs();
-    }
-
-    public void ReadInputs()
-    {
-        _inputs.forward.Update(KeyCode.W);
-        _inputs.backward.Update(KeyCode.S);
-        _inputs.left.Update(KeyCode.A);
-        _inputs.right.Update(KeyCode.D);
-        _inputs.shift.Update(KeyCode.LeftShift);
-
-        // MOUSE
-        _inputs.mouse1.Update(KeyCode.Mouse0);
-        _inputs.mouse2.Update(KeyCode.Mouse1);
-
-        _inputs.mouseDeltaX = Input.GetAxis("Mouse X");
-        _inputs.mouseDeltaY = -Input.GetAxis("Mouse Y");
-
-        _inputs.mousePositionX += _inputs.mouseDeltaX;
-        _inputs.mousePositionY = Mathf.Clamp(_inputs.mousePositionY + _inputs.mouseDeltaY, -90, 90);
-
-        // DEBUG
-        if (Input.GetKeyDown(KeyCode.R)) {
-            this.transform.position = new Vector3(0, 100, 0);
-            _charBody.velocity = Vector3.zero;
-        }
-        //======
-
-         _inputs.lookDirection =    Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up)
-                                    * Quaternion.AngleAxis(_inputs.mousePositionY, Vector3.right);
-
-
     }
 
     private void UpdateState()

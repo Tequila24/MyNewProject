@@ -7,10 +7,10 @@ namespace CharMotions
 {
     abstract public class Motion : MonoBehaviour
     {
-        protected InputState _inputs;
+        protected InputMaster _inputs;
+
         [SerializeField]
         protected Vector3 _velocity = Vector3.zero;
-
 
         protected Rigidbody _charBody = null;
         protected Collider _charCollider = null;
@@ -18,19 +18,16 @@ namespace CharMotions
 
         protected CrosshairController _csControl = null;
 
-        public virtual void UpdateInputs(InputState newInputs)
-        {
-            _inputs = newInputs;
-        }
-
         abstract public void BeginMotion(Vector3 oldVelocity);
-        virtual public void EndMotion()
-        {
-        }
+        abstract public void EndMotion();
 
         abstract public void ProcessMotion();
 
         abstract public Vector3 GetVelocity();
+
+        private void Awake() {
+            _inputs = InputMaster.Instance;
+        }
 
         protected Vector3 GetDepenetration(Vector3 deltaTransform = new Vector3(), Quaternion deltaRotation = new Quaternion() )
         {
