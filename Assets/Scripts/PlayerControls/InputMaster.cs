@@ -9,22 +9,35 @@ public class Key
     public UnityEvent pressEvent { get { return _onPressEvent; } }
     UnityEvent _onLiftEvent;
     public UnityEvent liftEvent { get { return _onLiftEvent; } }
+    UnityEvent _onDoubleTapEvent;
+    public UnityEvent doubleTapEvent { get { return _onDoubleTapEvent; } }
 
+    private float _tapTimeStamp;
 
     private int _state;
     public int state { get { return _state; } }
 
-    public Key()
+    private InputMaster _master;
+
+    public Key(InputMaster newMaster)
     {
+        _master = newMaster;
         _onPressEvent = new UnityEvent();
         _onLiftEvent = new UnityEvent();
-    }
+        _onDoubleTapEvent = new UnityEvent();
 
+        _tapTimeStamp = 0;
+    }
 
     public void Update(KeyCode code)
     {
         if (Input.GetKeyDown(code))
+        {
             _onPressEvent.Invoke();
+            if ( (Time.time - _tapTimeStamp) < 0.3f)
+                _onDoubleTapEvent.Invoke();
+            _tapTimeStamp = Time.time;
+        }
 
         if (Input.GetKeyUp(code))
             _onLiftEvent.Invoke();
@@ -32,7 +45,6 @@ public class Key
         _state = Input.GetKey(code) ? 1 : 0;
     }
 }
-
 
 
 
@@ -55,14 +67,44 @@ public class InputMaster : MonoBehaviour
     public UnityEvent onInputUpdateEvent { get { return _onInputUpdateEvent; } }
 
     // keys shortcuts
-    // ==========
-    public int forward { get { return _keys[KeyCode.W].state; } }
-    public int backward { get { return _keys[KeyCode.S].state; } }
-    public int left { get { return _keys[KeyCode.A].state; } }
-    public int right { get { return _keys[KeyCode.D].state; } }
+    // ==============================
+    public int forward 
+    { 
+        get { if (_keys.ContainsKey(KeyCode.W))
+                return _keys[KeyCode.W].state;
+            else
+                return 0; } 
+    }
+    public int backward 
+    { 
+        get { if (_keys.ContainsKey(KeyCode.S))
+                return _keys[KeyCode.S].state;
+            else
+                return 0; } 
+    }
+    public int left 
+    { 
+        get { if (_keys.ContainsKey(KeyCode.A))
+                return _keys[KeyCode.A].state;
+            else
+                return 0; } 
+    }
+    public int right 
+    { 
+        get { if (_keys.ContainsKey(KeyCode.D))
+                return _keys[KeyCode.D].state;
+            else
+                return 0; } 
+    }
 
-    public int shift { get { return _keys[KeyCode.LeftShift].state; } }
-    // ==========
+    public int shift 
+    { 
+        get { if (_keys.ContainsKey(KeyCode.LeftShift))
+                return _keys[KeyCode.LeftShift].state;
+            else
+                return 0; } 
+    }
+    // ==============================
 
 
     private void OnValidate() 
@@ -87,16 +129,16 @@ public class InputMaster : MonoBehaviour
         if (_keys.Count != 0)
             return;
 
-        _keys.Add(KeyCode.W, new Key());
-        _keys.Add(KeyCode.S, new Key());
-        _keys.Add(KeyCode.A, new Key());
-        _keys.Add(KeyCode.D, new Key());
+        _keys.Add(KeyCode.W, new Key(this));
+        _keys.Add(KeyCode.S, new Key(this));
+        _keys.Add(KeyCode.A, new Key(this));
+        _keys.Add(KeyCode.D, new Key(this));
 
-        _keys.Add(KeyCode.Space, new Key());
-        _keys.Add(KeyCode.LeftShift, new Key());
+        _keys.Add(KeyCode.Space, new Key(this));
+        _keys.Add(KeyCode.LeftShift, new Key(this));
 
-        _keys.Add(KeyCode.Mouse0, new Key());
-        _keys.Add(KeyCode.Mouse1, new Key());
+        _keys.Add(KeyCode.Mouse0, new Key(this));
+        _keys.Add(KeyCode.Mouse1, new Key(this));
 
         _onInputUpdateEvent = new UnityEvent();
     }
@@ -120,14 +162,37 @@ public class InputMaster : MonoBehaviour
         onInputUpdateEvent.Invoke();
     }
 
-    public UnityEvent GetLiftedEvent(KeyCode code)
+    public bool AddKeyLiftListener(KeyCode code, UnityAction action)
     {
-        return _keys[code].liftEvent;
+        if (_keys.ContainsKey(code)) 
+        {
+            _keys[code].liftEvent.AddListener(action);
+            return true;
+        }
+        else
+            return false;
     }
 
-    public UnityEvent GetPressedEvent(KeyCode code)
+    public bool AddKeyPressListener(KeyCode code, UnityAction action)
     {
-        return _keys[code].pressEvent;
+        if (_keys.ContainsKey(code)) 
+        {
+            _keys[code].pressEvent.AddListener(action);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    public bool AddKeyDoubleTapListener(KeyCode code, UnityAction action)
+    {
+        if (_keys.ContainsKey(code)) 
+        {
+            _keys[code].doubleTapEvent.AddListener(action);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

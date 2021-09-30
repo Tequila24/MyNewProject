@@ -9,6 +9,7 @@ namespace CharMotions
         public static float stairHeight = 0.25f;
         private static SurfaceController _surfaceControl;
         private Vector3 _heightAdjust;
+        private Vector3 _dashVelocity;
 
         public static WalkMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider, SurfaceController newSurfaceControl)
         {
@@ -30,6 +31,21 @@ namespace CharMotions
             _velocity = _surfaceControl.rotationFromNormal * Vector3.ProjectOnPlane(oldVelocity, _surfaceControl.contactPointNormal);
             _charBody.isKinematic = false;
             _charBody.useGravity = false;
+        }
+
+        private void Start() 
+        {
+            Init();
+        }
+
+        private void Init()
+        {
+            _inputs.AddKeyDoubleTapListener(KeyCode.W, this.Dash);
+        }
+
+        private void Dash()
+        {
+            _velocity+= Quaternion.Euler(0, _inputs.mousePositionX, 0) * (Vector3.forward + Vector3.up * 0.3f) * 30f;
         }
 
         public override void EndMotion()
