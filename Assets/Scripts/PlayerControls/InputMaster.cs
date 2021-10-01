@@ -17,11 +17,8 @@ public class Key
     private int _state;
     public int state { get { return _state; } }
 
-    private InputMaster _master;
-
-    public Key(InputMaster newMaster)
+    public Key()
     {
-        _master = newMaster;
         _onPressEvent = new UnityEvent();
         _onLiftEvent = new UnityEvent();
         _onDoubleTapEvent = new UnityEvent();
@@ -53,7 +50,17 @@ public class InputMaster : MonoBehaviour
     public static InputMaster _instance;
     public static InputMaster Instance { get { return _instance; } }
 
-    private Dictionary<KeyCode, Key> _keys = new Dictionary<KeyCode, Key>();
+    private Dictionary<KeyCode, Key> _keys = new Dictionary<KeyCode, Key>()
+    {
+        { KeyCode.W, new Key() },
+        { KeyCode.S, new Key() },
+        { KeyCode.A, new Key() },
+        { KeyCode.D, new Key() },
+        { KeyCode.Space, new Key() },
+        { KeyCode.LeftShift, new Key() },
+        { KeyCode.Mouse0, new Key() },
+        { KeyCode.Mouse1, new Key() }
+    };
 
     public float mouseDeltaX;
     public float mouseDeltaY;
@@ -63,7 +70,7 @@ public class InputMaster : MonoBehaviour
 
     public Quaternion lookDirection;
 
-    private UnityEvent _onInputUpdateEvent;
+    private UnityEvent _onInputUpdateEvent = new UnityEvent();
     public UnityEvent onInputUpdateEvent { get { return _onInputUpdateEvent; } }
 
     // keys shortcuts
@@ -96,11 +103,17 @@ public class InputMaster : MonoBehaviour
             else
                 return 0; } 
     }
-
     public int shift 
     { 
         get { if (_keys.ContainsKey(KeyCode.LeftShift))
                 return _keys[KeyCode.LeftShift].state;
+            else
+                return 0; } 
+    }
+    public int space 
+    { 
+        get { if (_keys.ContainsKey(KeyCode.Space))
+                return _keys[KeyCode.Space].state;
             else
                 return 0; } 
     }
@@ -114,33 +127,17 @@ public class InputMaster : MonoBehaviour
 
     private void Awake()
     {
+        Init();
+    }
+
+    private void Init()
+    {
         if(_instance != null && _instance != this)
         {
             Destroy(this.gameObject);
         } else {
             _instance = this;
         }
-
-        Init();
-    }
-
-    private void Init()
-    {
-        if (_keys.Count != 0)
-            return;
-
-        _keys.Add(KeyCode.W, new Key(this));
-        _keys.Add(KeyCode.S, new Key(this));
-        _keys.Add(KeyCode.A, new Key(this));
-        _keys.Add(KeyCode.D, new Key(this));
-
-        _keys.Add(KeyCode.Space, new Key(this));
-        _keys.Add(KeyCode.LeftShift, new Key(this));
-
-        _keys.Add(KeyCode.Mouse0, new Key(this));
-        _keys.Add(KeyCode.Mouse1, new Key(this));
-
-        _onInputUpdateEvent = new UnityEvent();
     }
 
     private void Update()

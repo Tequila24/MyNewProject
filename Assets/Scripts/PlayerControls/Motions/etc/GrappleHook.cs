@@ -77,23 +77,6 @@ namespace CharMotions
             }
         }
 
-        public void RetractWinch()
-        {
-            if (_lengthLeft > _minLength)
-                _winchDirection = -1;
-        }
-
-        public void ExtendWinch()
-        {
-            if (_lengthLeft < _maxLength)
-                _winchDirection = 1;
-        }
-
-        public void StopWinch()
-        {
-            _winchDirection = 0;
-        }
-
         public void SetNewLength(float newLength)
         {
             _lengthCurrent = newLength + _lengthWrapped;
@@ -109,10 +92,10 @@ namespace CharMotions
             _isGrappled = false;
         }
 
-        public Vector3 GetFromTo(Vector3 pointFrom)
+        public Vector3 GetLastPoint()
         {
             if (_isGrappled)
-                return ( (_linePoints[_linePoints.Count-1]).GetWorldPoint() - pointFrom );
+                return (_linePoints[_linePoints.Count-1]).GetWorldPoint();
             else
                 return Vector3.zero;
         }
@@ -148,7 +131,7 @@ namespace CharMotions
         }
 
 
-        public void UpdateLine(Vector3 characterPosition)
+        public void UpdateLine(Transform charTransform)
         {
             //check if wrapped objects exist
             for (int point_n = 0; point_n < _linePoints.Count; point_n++)
@@ -164,20 +147,23 @@ namespace CharMotions
 
             // cast ray between last point and character
             RaycastHit hit;
-            if (Physics.Linecast(characterPosition, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
+            if (Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
             {
-                if (Vector3.Distance(hit.point, _linePoints[_linePoints.Count-1].GetWorldPoint()) > 0.1f) 
+                if (hit.transform != charTransform)
                 {
-                    Vector3 toOriginalPoint = _linePoints[_linePoints.Count-1].GetWorldPoint() - hit.point;
-                    Vector3 toChar = characterPosition - hit.point;
-                    Vector3 gapVector = ((toOriginalPoint + toChar).normalized * 0.02f);
-                    Vector3 wrapPoint = hit.point + gapVector;
+                    if (Vector3.Distance(hit.point, _linePoints[_linePoints.Count-1].GetWorldPoint()) > 0.1f) 
+                    {
+                        Vector3 toOriginalPoint = _linePoints[_linePoints.Count-1].GetWorldPoint() - hit.point;
+                        Vector3 toChar = charTransform.position - hit.point;
+                        Vector3 gapVector = ((toOriginalPoint + toChar).normalized * 0.02f);
+                        Vector3 wrapPoint = hit.point + gapVector;
 
-                    _linePoints.Add(new LinePoint(wrapPoint, hit.transform));
+                        _linePoints.Add(new LinePoint(wrapPoint, hit.transform));
 
-                    /*Debug.DrawRay(hit.point, toOriginalPoint, Color.yellow, 10);
-                    Debug.DrawRay(hit.point, toChar, Color.yellow, 10);
-                    Debug.DrawRay(hit.point, gapVector, Color.red, 10);*/
+                        /*Debug.DrawRay(hit.point, toOriginalPoint, Color.yellow, 10);
+                        Debug.DrawRay(hit.point, toChar, Color.yellow, 10);
+                        Debug.DrawRay(hit.point, gapVector, Color.red, 10);*/
+                    }
                 }
             }
 
@@ -187,7 +173,7 @@ namespace CharMotions
             if (_linePoints.Count > 1)
             {
                 RaycastHit unstuckHit;
-                if ( !(Physics.Linecast(characterPosition, _linePoints[_linePoints.Count-2].GetWorldPoint(), out unstuckHit, 1, 0)) )
+                if ( !(Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-2].GetWorldPoint(), out unstuckHit, 1, 0)) )
                 {
                     _linePoints.RemoveAt(_linePoints.Count-1);
                 } else 
@@ -205,7 +191,7 @@ namespace CharMotions
                 _lineRenderer.SetPosition(point_n, _linePoints[point_n].GetWorldPoint());
                 _lineRenderer.positionCount++;
             }
-            _lineRenderer.SetPosition(_lineRenderer.positionCount-1, characterPosition);
+            _lineRenderer.SetPosition(_lineRenderer.positionCount-1, charTransform.position);
 
 
 

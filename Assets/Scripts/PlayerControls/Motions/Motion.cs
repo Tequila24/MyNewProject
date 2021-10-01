@@ -25,7 +25,8 @@ namespace CharMotions
 
         abstract public Vector3 GetVelocity();
 
-        private void Awake() {
+        private void Awake() 
+        {
             _inputs = InputMaster.Instance;
         }
 

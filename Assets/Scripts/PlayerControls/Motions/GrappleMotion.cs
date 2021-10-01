@@ -10,16 +10,6 @@ namespace CharMotions
     {
         GrappleHook _grapple;
 
-        [SerializeField]
-        private Vector3 _adjustPosToRope = Vector3.zero;
-        [SerializeField]
-        private float _ropeRetractionSpeed = 0;
-        [SerializeField]
-        private Vector3 _summVelocity = Vector3.zero;
-
-        [SerializeField]
-        string kek;
-
         public bool isGrappled
         {
             get { return _grapple.isGrappled; }
@@ -46,29 +36,23 @@ namespace CharMotions
             Init();
         }
 
+        private void OnValidate() 
+        {
+            Init();    
+        }
+
         private void Init()
         {
-            _inputs.AddKeyLiftListener(KeyCode.W, this.OnRopeKeysPress);
-            _inputs.AddKeyLiftListener(KeyCode.S, this.OnRopeKeysPress);
+            _inputs = InputMaster.Instance;
+
+            _inputs.AddKeyLiftListener(KeyCode.Space, this.OnRopeKeysPress);
 
             _inputs.onInputUpdateEvent.AddListener(this.ProcessCrosshair);
 
-            _inputs.AddKeyPressListener(KeyCode.Mouse0, this.TryGrapple);
-            _inputs.AddKeyLiftListener(KeyCode.Mouse0, this._grapple.Reset);
-
-            _inputs.AddKeyPressListener(KeyCode.W, this._grapple.RetractWinch);
-            _inputs.AddKeyPressListener(KeyCode.S, this._grapple.ExtendWinch);
-            _inputs.AddKeyLiftListener(KeyCode.W, this._grapple.StopWinch);
-            _inputs.AddKeyLiftListener(KeyCode.S, this._grapple.StopWinch);
-
-            _inputs.AddKeyDoubleTapListener(KeyCode.W, this.test);
+            _inputs.AddKeyPressListener(KeyCode.Mouse1, this.TryGrapple);
+            _inputs.AddKeyLiftListener(KeyCode.Mouse1, this._grapple.Reset);
         }
         
-        private void test()
-        {
-            Debug.Log("dash");
-        }
-
         private void TryGrapple()
         {
             _grapple.TryGrappleFromTo(_charBody.transform.position, _inputs.lookDirection);
@@ -83,9 +67,6 @@ namespace CharMotions
 
         public override void EndMotion()
         {
-            _adjustPosToRope = Vector3.zero;
-            _ropeRetractionSpeed = 0;
-
             _grapple.Reset();
         }
 
@@ -115,63 +96,57 @@ namespace CharMotions
 
         private void ProcessGrapple()
         {   
-            _grapple.UpdateLine(this.transform.position + _charBody.velocity * Time.deltaTime);
+            _grapple.UpdateLine(this.transform);
         }
 
         private void OnRopeKeysPress()
         {
-            _grapple.SetNewLength(_grapple.GetFromTo(_charBody.transform.position).magnitude);
+            _grapple.SetNewLength((_grapple.GetLastPoint() - _charBody.transform.position).magnitude);
         }
 
         private void ProcessVelocity()
         {
             // GRAPPLE ROPE PHYSICS Interpolate for 5 steps
-            int steps = 10;
-            float stepTime = Time.deltaTime/steps;
-            Vector3 newPosition = _charBody.transform.position + (_velocity * stepTime);
-            for (int cnt = 0; cnt < steps; cnt++)
-            {
-                Vector3 grappleDirection = _grapple.GetFromTo(newPosition).normalized;
-                float distanceToLastPoint = _grapple.GetFromTo(newPosition).magnitude;
-                float lengthDelta = distanceToLastPoint - _grapple.lengthleft;
+            Vector3 grappleDirection = (_grapple.GetLastPoint() - _charBody.transform.position).normalized;
+            Debug.DrawLine(this.transform.position, _grapple.GetLastPoint(), Color.yellow, Time.deltaTime);
+            float distanceToLastPoint = (_grapple.GetLastPoint() - _charBody.transform.position).magnitude;
+            float lengthDelta = distanceToLastPoint - _grapple.lengthleft;
 
+            if ( (_inputs.space == 0) )
+            {
                 if (lengthDelta > 0) {
-                    float tensionCoefficient = 30000 / lengthDelta;
+                    float tensionCoefficient = 3000000 / _grapple.lengthleft;
                     float forceAmount = tensionCoefficient * lengthDelta;
                     float accelerationAmount = Mathf.Clamp(forceAmount / _charBody.mass, 0, 60);
                     Vector3 accelerationVector = grappleDirection * accelerationAmount;
-                    _velocity += accelerationVector * stepTime;
-                    
+                    _velocity += accelerationVector * Time.deltaTime;
+
                     if (Vector3.Dot(grappleDirection, _velocity) < 0) {
                         Vector3 centripetalVelocity = Vector3.Project(_velocity, grappleDirection);
                         _velocity -= centripetalVelocity;
                     }
                 }
-
-                // GRAVITY
-                _velocity += Physics.gravity * stepTime;
-
-                // AIR DRAG
-                Vector3 airDragAcceleration = _velocity.normalized * ( 0.002f * ((_velocity.sqrMagnitude)/2)) / _charBody.mass;
-                _velocity -= airDragAcceleration * stepTime;
-
-                // SAVE NEW POSITION
-                newPosition = newPosition + (_velocity * stepTime);
             }
+
+            // Rope retraction acceleration
+            _velocity += grappleDirection * (1.0f) * _inputs.space;
+
+            // GRAVITYS
+            _velocity += Physics.gravity * Time.deltaTime;
+
+            // AIR DRAG
+            Vector3 airDragAcceleration = _velocity.normalized * ( 0.002f * ((_velocity.sqrMagnitude)/2)) / _charBody.mass;
+            _velocity -= airDragAcceleration * Time.deltaTime;
 
             // remove part of velocity after hitting something
             if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) ) 
             {
-                //Debug.Log("CONTACT" + _contactNormal);
                 _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal);
-                _velocity -= _velocity * 0.01f;
+                _velocity -= _velocity * 0.001f;
             }
 
-            // NEEDS TWEAKING
-            //Vector3 lookDirection = _inputs.lookDirection * Vector3.forward * _velocity.sqrMagnitude * 0.5f;
-
             // APPLY VELOCITY
-            _charBody.velocity = Vector3.ClampMagnitude(_velocity /*+ lookDirection * Time.deltaTime*/, Physics.gravity.sqrMagnitude * 50);
+            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 50);
         }
 
         private void ProcessRotation()

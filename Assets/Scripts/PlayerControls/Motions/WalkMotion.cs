@@ -45,7 +45,7 @@ namespace CharMotions
 
         private void Dash()
         {
-            _velocity+= Quaternion.Euler(0, _inputs.mousePositionX, 0) * (Vector3.forward + Vector3.up * 0.3f) * 30f;
+            _velocity += Quaternion.Euler(0, _inputs.mousePositionX, 0) * (Vector3.forward + Vector3.up * 0.3f) * 30f;
         }
 
         public override void EndMotion()
