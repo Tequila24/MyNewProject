@@ -7,6 +7,7 @@ namespace CharMotions
 {
     abstract public class Motion : MonoBehaviour
     {
+        [SerializeField]
         protected InputMaster _inputs;
 
         [SerializeField]

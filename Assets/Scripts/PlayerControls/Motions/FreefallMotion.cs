@@ -7,6 +7,8 @@ namespace CharMotions
 {
     public class FreefallMotion : CharMotions.Motion
     {
+        float dashTimeout = 0;
+
         public static FreefallMotion Create(GameObject parent, Rigidbody charBody, Collider charCollider)
         {
             FreefallMotion motion = parent.GetComponent<FreefallMotion>();
@@ -26,12 +28,29 @@ namespace CharMotions
 
         private void Init()
         {
-            _inputs.AddKeyDoubleTapListener(KeyCode.W, this.Dash);
+            _inputs.AddKeyDoubleTapListener(KeyCode.W, delegate{this.Dash(Vector3.forward);});
+            _inputs.AddKeyDoubleTapListener(KeyCode.A, delegate{this.Dash(Vector3.left);});
+            _inputs.AddKeyDoubleTapListener(KeyCode.D, delegate{this.Dash(Vector3.right);});
+            _inputs.AddKeyDoubleTapListener(KeyCode.S, delegate{this.Dash(Vector3.back);});
         }
 
-        private void Dash()
+        private void Dash(Vector3 direction)
         {
-            _velocity += Quaternion.Euler(0, _inputs.mousePositionX, 0) * (Vector3.forward + Vector3.up * 0.3f) * 30f;
+            if (dashTimeout<=0)
+            {
+                Debug.Log("DASHING FLYING " + dashTimeout);
+                _velocity +=Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
+                StartCoroutine(DashTimeout(2));
+            }
+        }
+
+        private IEnumerator DashTimeout(float timeout)
+        {
+            while(dashTimeout>0)
+            {
+                dashTimeout -= Time.deltaTime;
+            }
+            yield return null;
         }
 
         public override void BeginMotion(Vector3 oldVelocity)
@@ -46,6 +65,13 @@ namespace CharMotions
         }
 
         public override void ProcessMotion()
+        {
+            ProcessVelocity();
+
+            ProcessRotation();
+        }
+
+        private void ProcessVelocity()
         {
             Quaternion yawLookDirection = Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up);
 
@@ -62,9 +88,18 @@ namespace CharMotions
             if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) )
                     _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal);
 
+
+            // AIR DRAG
+            Vector3 airDragAcceleration = _velocity.normalized * ( 0.002f * ((_velocity.sqrMagnitude)/2)) / _charBody.mass;
+            _velocity -= airDragAcceleration * Time.deltaTime;
+
+
             // APPLY VELOCITY
-            _charBody.velocity = _velocity;
-            
+            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 10);
+        }
+
+        private void ProcessRotation()
+        {
             _charBody.angularVelocity = Vector3.MoveTowards(_charBody.angularVelocity, Vector3.zero, 0.001f);
 
             Quaternion lookDirection = Quaternion.Euler(0, _inputs.mousePositionX, 0);

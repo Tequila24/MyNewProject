@@ -10,6 +10,8 @@ namespace CharMotions
         private static SurfaceController _surfaceControl;
         private Vector3 _heightAdjust;
         private Vector3 _dashVelocity;
+        
+        float dashTimeout = 0;
 
         public static WalkMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider, SurfaceController newSurfaceControl)
         {
@@ -38,14 +40,13 @@ namespace CharMotions
             Init();
         }
 
-        private void Init()
+        private void OnValidate()
         {
-            _inputs.AddKeyDoubleTapListener(KeyCode.W, this.Dash);
+            Init();
         }
 
-        private void Dash()
+        private void Init()
         {
-            _velocity += Quaternion.Euler(0, _inputs.mousePositionX, 0) * (Vector3.forward + Vector3.up * 0.3f) * 30f;
         }
 
         public override void EndMotion()
@@ -54,6 +55,13 @@ namespace CharMotions
         }
 
         public override void ProcessMotion()
+        {
+            ProcessVelocity();
+
+            ProcessRotation();
+        }
+
+        private void ProcessVelocity()
         {
             if (_velocity.sqrMagnitude < 0.01f)
                 _velocity = Vector3.zero;
@@ -97,8 +105,10 @@ namespace CharMotions
             // APPLY VELOCITY
             _charBody.velocity = ( _heightAdjust
                                    + _surfaceControl.rotationToNormal * _velocity);
+        }
 
-
+        private void ProcessRotation()
+        {
             // ROTATION
             if (_velocity.sqrMagnitude != 0)
                 _charBody.transform.rotation = Quaternion.RotateTowards(_charBody.transform.rotation, 

@@ -847,6 +847,40 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 221839926}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!21 &232586803
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Sprites/Default
+  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AlphaTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - PixelSnap: 0
+    - _EnableExternalAlpha: 0
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &272555337
 GameObject:
   m_ObjectHideFlags: 0
@@ -2362,40 +2396,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 11e3806aef23a7046992ad06b86d19ad, type: 3}
---- !u!21 &860981099
-Material:
-  serializedVersion: 6
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Sprites/Default
-  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _AlphaTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Floats:
-    - PixelSnap: 0
-    - _EnableExternalAlpha: 0
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Flip: {r: 1, g: 1, b: 1, a: 1}
-    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &871337971
 GameObject:
   m_ObjectHideFlags: 0
@@ -6790,6 +6790,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7516295a7a734c44b8631619aecc46d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _inputs: {fileID: 872491635}
   _velocity: {x: 0, y: 0, z: 0}
 --- !u!114 &1854963922
 MonoBehaviour:
@@ -6826,6 +6827,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84a7402a1e5b6ac41a12d8fdf1354a79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _inputs: {fileID: 872491635}
   _velocity: {x: 0, y: 0, z: 0}
 --- !u!114 &1854963924
 MonoBehaviour:
@@ -6951,7 +6953,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 860981099}
+  - {fileID: 232586803}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -7050,11 +7052,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6289696a7561a404e95f39d19a909846, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _inputs: {fileID: 872491635}
   _velocity: {x: 0, y: 0, z: 0}
-  _adjustPosToRope: {x: 0, y: 0, z: 0}
-  _ropeRetractionSpeed: 0
-  _summVelocity: {x: 0, y: 0, z: 0}
-  kek: 
 --- !u!114 &1854963932
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -15,6 +15,8 @@ namespace CharMotions
             get { return _grapple.isGrappled; }
         }
 
+        float dashTimeout = 0;
+
         public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider)
         {
             GrappleMotion motion = newParent.GetComponent<GrappleMotion>();
@@ -43,14 +45,15 @@ namespace CharMotions
 
         private void Init()
         {
-            _inputs = InputMaster.Instance;
-
             _inputs.AddKeyLiftListener(KeyCode.Space, this.OnRopeKeysPress);
 
             _inputs.onInputUpdateEvent.AddListener(this.ProcessCrosshair);
 
             _inputs.AddKeyPressListener(KeyCode.Mouse1, this.TryGrapple);
             _inputs.AddKeyLiftListener(KeyCode.Mouse1, this._grapple.Reset);
+
+            _inputs.AddKeyDoubleTapListener(KeyCode.A, delegate{this.Dash(Vector3.left);});
+            _inputs.AddKeyDoubleTapListener(KeyCode.D, delegate{this.Dash(Vector3.right);});
         }
         
         private void TryGrapple()
@@ -68,6 +71,25 @@ namespace CharMotions
         public override void EndMotion()
         {
             _grapple.Reset();
+        }
+
+        private void Dash(Vector3 direction)
+        {
+            if (dashTimeout<=0)
+            {
+                _velocity += new Vector3(0, _velocity.y, 0) + Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
+                StartCoroutine(DashTimeout(2));
+            }
+        }
+
+        private IEnumerator DashTimeout(float timeout)
+        {
+            dashTimeout = 2.0f;
+            while(dashTimeout>0)
+            {
+                dashTimeout -= Time.deltaTime;
+            }
+            yield return null;
         }
 
         public override void ProcessMotion()
@@ -146,7 +168,7 @@ namespace CharMotions
             }
 
             // APPLY VELOCITY
-            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 50);
+            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 30);
         }
 
         private void ProcessRotation()
