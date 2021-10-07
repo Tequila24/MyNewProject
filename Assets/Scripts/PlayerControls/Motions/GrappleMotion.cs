@@ -9,13 +9,15 @@ namespace CharMotions
     public class GrappleMotion : Motion
     {
         GrappleHook _grapple;
+        [SerializeField]
+        float delta;
 
         public bool isGrappled
         {
             get { return _grapple.isGrappled; }
         }
 
-        float dashTimeout = 0;
+        bool dashCooled = true;
 
         public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider)
         {
@@ -75,21 +77,21 @@ namespace CharMotions
 
         private void Dash(Vector3 direction)
         {
-            if (dashTimeout<=0)
+            if (this.isActiveAndEnabled)
             {
-                _velocity += new Vector3(0, _velocity.y, 0) + Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
-                StartCoroutine(DashTimeout(2));
+                if (dashCooled)
+                {
+                    _velocity += Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
+                    StartCoroutine(DashCountdown(1));
+                }
             }
         }
 
-        private IEnumerator DashTimeout(float timeout)
+        private IEnumerator DashCountdown(float time)
         {
-            dashTimeout = 2.0f;
-            while(dashTimeout>0)
-            {
-                dashTimeout -= Time.deltaTime;
-            }
-            yield return null;
+            dashCooled = false;
+            yield return new WaitForSeconds(time);
+            dashCooled = true;
         }
 
         public override void ProcessMotion()
@@ -118,7 +120,7 @@ namespace CharMotions
 
         private void ProcessGrapple()
         {   
-            _grapple.UpdateLine(this.transform);
+            _grapple.UpdateLine(this.transform, _charBody.velocity * Time.deltaTime);
         }
 
         private void OnRopeKeysPress()
@@ -133,20 +135,21 @@ namespace CharMotions
             Debug.DrawLine(this.transform.position, _grapple.GetLastPoint(), Color.yellow, Time.deltaTime);
             float distanceToLastPoint = (_grapple.GetLastPoint() - _charBody.transform.position).magnitude;
             float lengthDelta = distanceToLastPoint - _grapple.lengthleft;
+            delta = lengthDelta;
 
-            if ( (_inputs.space == 0) )
-            {
-                if (lengthDelta > 0) {
-                    float tensionCoefficient = 3000000 / _grapple.lengthleft;
-                    float forceAmount = tensionCoefficient * lengthDelta;
-                    float accelerationAmount = Mathf.Clamp(forceAmount / _charBody.mass, 0, 60);
-                    Vector3 accelerationVector = grappleDirection * accelerationAmount;
-                    _velocity += accelerationVector * Time.deltaTime;
+            if (lengthDelta > 0) {
+                float tensionCoefficient = 50000000 / _grapple.lengthleft;
+                float forceAmount = tensionCoefficient * lengthDelta;
+                float accelerationAmount = Mathf.Clamp(forceAmount / _charBody.mass, 0, 60);
+                Vector3 accelerationVector = grappleDirection * accelerationAmount;
+                _velocity += accelerationVector * Time.deltaTime;
 
-                    if (Vector3.Dot(grappleDirection, _velocity) < 0) {
-                        Vector3 centripetalVelocity = Vector3.Project(_velocity, grappleDirection);
-                        _velocity -= centripetalVelocity;
-                    }
+                if (Vector3.Dot(grappleDirection, _velocity) < 0) 
+                {
+                    Debug.Log("ping");
+                    Vector3 centripetalVelocity = Vector3.Project(_velocity, grappleDirection);
+                    _velocity -= centripetalVelocity;
+                    Debug.DrawRay(this.transform.position, _velocity, Color.magenta, Time.deltaTime);
                 }
             }
 

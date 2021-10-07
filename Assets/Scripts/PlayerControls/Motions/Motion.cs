@@ -15,7 +15,8 @@ namespace CharMotions
 
         protected Rigidbody _charBody = null;
         protected Collider _charCollider = null;
-        protected Vector3 _contactNormal = Vector3.zero;
+        protected Collision _contact = null;
+        protected Vector3 _contactNormal;
 
         protected CrosshairController _csControl = null;
 
@@ -66,41 +67,37 @@ namespace CharMotions
             return hit.distance;
         }
 
+        private void LateUpdate()
+        {
+            if (_contact != null)
+                if (_contact.gameObject == null)
+                    _contactNormal = Vector3.zero;
+        }
+
         void OnCollisionEnter(Collision hit)
         {
-            
+            _contact = hit;
             for (int i = 0; i < hit.contactCount; i++)
             {
                 _contactNormal += hit.contacts[i].normal;    
             }
             _contactNormal.Normalize();
-
-            /*if (_contactNormal.sqrMagnitude != 0) 
-                        if (Vector3.Angle(_velocity, _contactNormal) > 90)
-                            _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal); 
-            */
-            //Debug.Log("HIT " + hit.gameObject.name);
         }
 
         void OnCollisionStay(Collision hit)
         {
-            
+            _contact = hit;
             for (int i = 0; i < hit.contactCount; i++)
             {
                 _contactNormal += hit.contacts[i].normal;    
             }
             _contactNormal.Normalize();
-
-            /*if (_contactNormal.sqrMagnitude != 0) 
-                if (Vector3.Angle(_velocity, _contactNormal) > 90)
-                    _velocity = Vector3.ProjectOnPlane(_velocity, _contactNormal); 
-            */
         }
 
         void OnCollisionExit(Collision hit)
         {
+            _contact = null;
             _contactNormal = Vector3.zero;
-            //Debug.Log("UNHIT " + hit.gameObject.name);
         }
     }
 

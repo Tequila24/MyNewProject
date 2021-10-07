@@ -131,7 +131,7 @@ namespace CharMotions
         }
 
 
-        public void UpdateLine(Transform charTransform)
+        public void UpdateLine(Transform charTransform, Vector3 charVelocity)
         {
             //check if wrapped objects exist
             for (int point_n = 0; point_n < _linePoints.Count; point_n++)
@@ -147,7 +147,7 @@ namespace CharMotions
 
             // cast ray between last point and character
             RaycastHit hit;
-            if (Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
+            if (Physics.Linecast(charTransform.position + charVelocity, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
             {
                 if (hit.transform != charTransform)
                 {
@@ -173,7 +173,7 @@ namespace CharMotions
             if (_linePoints.Count > 1)
             {
                 RaycastHit unstuckHit;
-                if ( !(Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-2].GetWorldPoint(), out unstuckHit, 1, 0)) )
+                if ( !(Physics.Linecast(charTransform.position + charVelocity, _linePoints[_linePoints.Count-2].GetWorldPoint(), out unstuckHit, 1, 0)) )
                 {
                     _linePoints.RemoveAt(_linePoints.Count-1);
                 } else 
@@ -191,7 +191,7 @@ namespace CharMotions
                 _lineRenderer.SetPosition(point_n, _linePoints[point_n].GetWorldPoint());
                 _lineRenderer.positionCount++;
             }
-            _lineRenderer.SetPosition(_lineRenderer.positionCount-1, charTransform.position);
+            _lineRenderer.SetPosition(_lineRenderer.positionCount-1, charTransform.position + charVelocity);
 
 
 

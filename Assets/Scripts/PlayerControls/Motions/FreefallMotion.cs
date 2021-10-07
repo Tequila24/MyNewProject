@@ -7,7 +7,8 @@ namespace CharMotions
 {
     public class FreefallMotion : CharMotions.Motion
     {
-        float dashTimeout = 0;
+        bool dashCooled = true;
+
 
         public static FreefallMotion Create(GameObject parent, Rigidbody charBody, Collider charCollider)
         {
@@ -25,6 +26,10 @@ namespace CharMotions
         {
             Init();    
         }
+        private void OnValidate()
+        {
+            Init();
+        }
 
         private void Init()
         {
@@ -36,21 +41,21 @@ namespace CharMotions
 
         private void Dash(Vector3 direction)
         {
-            if (dashTimeout<=0)
+            if (this.isActiveAndEnabled)
             {
-                Debug.Log("DASHING FLYING " + dashTimeout);
-                _velocity +=Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
-                StartCoroutine(DashTimeout(2));
+                if (dashCooled)
+                {
+                    _velocity += Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
+                    StartCoroutine(DashCountdown(1));
+                }
             }
         }
 
-        private IEnumerator DashTimeout(float timeout)
+        private IEnumerator DashCountdown(float time)
         {
-            while(dashTimeout>0)
-            {
-                dashTimeout -= Time.deltaTime;
-            }
-            yield return null;
+            dashCooled = false;
+            yield return new WaitForSeconds(time);
+            dashCooled = true;
         }
 
         public override void BeginMotion(Vector3 oldVelocity)
@@ -75,6 +80,7 @@ namespace CharMotions
         {
             Quaternion yawLookDirection = Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up);
 
+
             // create step based on inputs
             Vector3 step = new Vector3( _inputs.right - _inputs.left,
                                         0,
@@ -83,6 +89,7 @@ namespace CharMotions
             Vector3 stepAcceleration = yawLookDirection * step;
 
             _velocity += (freeFallAcceleration + stepAcceleration) * Time.deltaTime;
+
 
             // remove part of velocity after hitting something
             if ( (_contactNormal.sqrMagnitude > 0) && (Vector3.Dot(_contactNormal, _velocity) < 0) )
