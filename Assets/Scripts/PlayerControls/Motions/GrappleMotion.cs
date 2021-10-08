@@ -132,7 +132,6 @@ namespace CharMotions
         {
             // GRAPPLE ROPE PHYSICS Interpolate for 5 steps
             Vector3 grappleDirection = (_grapple.GetLastPoint() - _charBody.transform.position).normalized;
-            Debug.DrawLine(this.transform.position, _grapple.GetLastPoint(), Color.yellow, Time.deltaTime);
             float distanceToLastPoint = (_grapple.GetLastPoint() - _charBody.transform.position).magnitude;
             float lengthDelta = distanceToLastPoint - _grapple.lengthleft;
             delta = lengthDelta;
@@ -146,7 +145,6 @@ namespace CharMotions
 
                 if (Vector3.Dot(grappleDirection, _velocity) < 0) 
                 {
-                    Debug.Log("ping");
                     Vector3 centripetalVelocity = Vector3.Project(_velocity, grappleDirection);
                     _velocity -= centripetalVelocity;
                     Debug.DrawRay(this.transform.position, _velocity, Color.magenta, Time.deltaTime);

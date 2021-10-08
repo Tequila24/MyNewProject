@@ -147,43 +147,65 @@ namespace CharMotions
 
             // cast ray between last point and character
             RaycastHit hit;
-            if (Physics.Linecast(charTransform.position + charVelocity, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
-            {
+            if (Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
                 if (hit.transform != charTransform)
-                {
                     if (Vector3.Distance(hit.point, _linePoints[_linePoints.Count-1].GetWorldPoint()) > 0.1f) 
-                    {
-                        Vector3 toOriginalPoint = _linePoints[_linePoints.Count-1].GetWorldPoint() - hit.point;
-                        Vector3 toChar = charTransform.position - hit.point;
-                        Vector3 gapVector = ((toOriginalPoint + toChar).normalized * 0.02f);
-                        Vector3 wrapPoint = hit.point + gapVector;
+                        _linePoints.Add(new LinePoint(hit.point, hit.transform));
 
-                        _linePoints.Add(new LinePoint(wrapPoint, hit.transform));
 
-                        /*Debug.DrawRay(hit.point, toOriginalPoint, Color.yellow, 10);
-                        Debug.DrawRay(hit.point, toChar, Color.yellow, 10);
-                        Debug.DrawRay(hit.point, gapVector, Color.red, 10);*/
-                    }
+            // to unstuck the rope
+            // check if rope point can move to new position
+            if (_linePoints.Count > 1)
+            {
+                /*Vector3 directionToPrevious = (_linePoints[_linePoints.Count-2].GetWorldPoint() - charTransform.position).normalized;
+                float distanceToLastPoint = Vector3.Distance(charTransform.position, _linePoints[_linePoints.Count-1].GetWorldPoint());
+                Vector3 newRopePosition = charTransform.position + directionToPrevious * distanceToLastPoint;*/
+                Quaternion fromLastToPrevious = Quaternion.FromToRotation( (_linePoints[_linePoints.Count-1].GetWorldPoint() - charTransform.position),
+                                                                               (_linePoints[_linePoints.Count-2].GetWorldPoint() - charTransform.position) );
+                Vector3 newRopePosition = charTransform.position + fromLastToPrevious * (_linePoints[_linePoints.Count-1].GetWorldPoint() - charTransform.position);
+                Vector3 checkGap = (_linePoints[_linePoints.Count-1].GetWorldPoint() - newRopePosition).normalized * 0.1f;
+
+                bool isObstructed = Physics.Linecast( _linePoints[_linePoints.Count-1].GetWorldPoint() + checkGap,
+                                                      newRopePosition);
+                if ( isObstructed )
+                {
+                    _linePoints.RemoveAt(_linePoints.Count -1);
+                    //Debug.Break();
                 }
+                Debug.Log(isObstructed);
+                Debug.DrawLine( _linePoints[_linePoints.Count-1].GetWorldPoint() + checkGap, 
+                                newRopePosition,
+                                Color.white,
+                                Time.deltaTime );
+
+                //Debug.DrawLine( _linePoints[_linePoints.Count-1].GetWorldPoint(), charTransform.position, Color.blue, Time.deltaTime);
             }
 
 
-            // cast ray between point before last and character
-            // to unstuck the rope
+            /*
             if (_linePoints.Count > 1)
             {
                 RaycastHit unstuckHit;
-                if ( !(Physics.Linecast(charTransform.position + charVelocity, _linePoints[_linePoints.Count-2].GetWorldPoint(), out unstuckHit, 1, 0)) )
+                if ( !(Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-2].GetWorldPoint(), out unstuckHit, 1, 0)) )
                 {
-                    _linePoints.RemoveAt(_linePoints.Count-1);
-                } else 
-                {
-                    if (Vector3.Distance(unstuckHit.point, _linePoints[_linePoints.Count-2].GetWorldPoint()) < 0.1f)
+                    Quaternion fromLastToPrevious = Quaternion.FromToRotation( (_linePoints[_linePoints.Count-1].GetWorldPoint() - charTransform.position),
+                                                                               (_linePoints[_linePoints.Count-2].GetWorldPoint() - charTransform.position) );
+                    Vector3 unstuckCheckPoint = charTransform.position + fromLastToPrevious * (_linePoints[_linePoints.Count-1].GetWorldPoint() - charTransform.position);
+                    Vector3 unstuckGap = (_linePoints[_linePoints.Count-1].GetWorldPoint() - unstuckCheckPoint).normalized * 0.05f;
+                    if ( !Physics.Linecast(_linePoints[_linePoints.Count-1].GetWorldPoint() + unstuckGap, unstuckCheckPoint) )
                     {
                         _linePoints.RemoveAt(_linePoints.Count-1);
                     }
+                    Debug.DrawLine( _linePoints[_linePoints.Count-1].GetWorldPoint() + unstuckGap, 
+                                        unstuckCheckPoint,//(charTransform.position + charVelocity + _linePoints[_linePoints.Count-2].GetWorldPoint())/2,
+                                        Color.white,
+                                        Time.deltaTime );
+                    //Debug.DrawRay( _linePoints[_linePoints.Count-1].GetWorldPoint(), unstuckGap, Color.red, Time.deltaTime);
+                    Debug.DrawLine( _linePoints[_linePoints.Count-1].GetWorldPoint(), charTransform.position, Color.blue, Time.deltaTime);
+                    //Debug.Break();
                 }
             }
+            */
 
             _lineRenderer.positionCount = 1;
             for (int point_n = 0; point_n < _linePoints.Count; point_n++) 
@@ -208,6 +230,26 @@ namespace CharMotions
             RecalculateLength();
         }
 
+        private static bool VectorIntersection(out Vector3 intersectionPoint, Vector3 line1Pos, Vector3 line1Dir, Vector3 line2Pos, Vector2 line2Dir)
+        {
+            Vector3 line2to1Dir = line2Pos - line1Pos;
+            Vector3 crossVec1and2 = Vector3.Cross(line1Dir, line2Dir);
+            Vector3 crossVec3and2 = Vector3.Cross(line2to1Dir, line2Dir);
+
+            float planarFactor = Vector3.Dot(line2to1Dir, crossVec1and2);
+
+            if( Mathf.Abs(planarFactor) < 0.0001f && crossVec1and2.sqrMagnitude > 0.0001f)
+            {
+                float s = Vector3.Dot(crossVec3and2, crossVec1and2) / crossVec1and2.sqrMagnitude;
+                intersectionPoint = line1Pos + (line1Dir * s);
+                return true;
+            }
+            else
+            {
+                intersectionPoint = Vector3.zero;
+                return false;
+            }
+        }
 
     }
 }
