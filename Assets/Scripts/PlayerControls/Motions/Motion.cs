@@ -15,7 +15,7 @@ namespace CharMotions
 
         protected Rigidbody _charBody = null;
         protected Collider _charCollider = null;
-        protected Collision _contact = null;
+        protected GameObject _contactObject = null;
         protected Vector3 _contactNormal;
 
         protected CrosshairController _csControl = null;
@@ -69,14 +69,13 @@ namespace CharMotions
 
         private void LateUpdate()
         {
-            if (_contact != null)
-                if (_contact.gameObject == null)
-                    _contactNormal = Vector3.zero;
+            if (_contactObject == null)
+                _contactNormal = Vector3.zero;
         }
 
         void OnCollisionEnter(Collision hit)
         {
-            _contact = hit;
+            _contactObject = hit.gameObject;
             for (int i = 0; i < hit.contactCount; i++)
             {
                 _contactNormal += hit.contacts[i].normal;    
@@ -86,7 +85,7 @@ namespace CharMotions
 
         void OnCollisionStay(Collision hit)
         {
-            _contact = hit;
+            _contactObject = hit.gameObject;
             for (int i = 0; i < hit.contactCount; i++)
             {
                 _contactNormal += hit.contacts[i].normal;    
@@ -96,7 +95,7 @@ namespace CharMotions
 
         void OnCollisionExit(Collision hit)
         {
-            _contact = null;
+            _contactObject = null;
             _contactNormal = Vector3.zero;
         }
     }
