@@ -100,7 +100,7 @@ namespace CharMotions
             float time = 0;
             while (time < dashAccelerationDuration)
             {
-                _velocity += _inputs.lookDirection * direction * 2f;
+                _velocity += _inputs.lookDirection * direction * 100f * Time.deltaTime;
                 time += Time.deltaTime;
                 yield return null;
             }
@@ -193,7 +193,8 @@ namespace CharMotions
             }
 
             // APPLY VELOCITY
-            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 30);
+            _velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 5f);
+            _charBody.velocity = _velocity;
         }
 
         private void ProcessRotation()

@@ -11,7 +11,7 @@ namespace CharMotions
         // AIRDASH
         [SerializeField]
         static private float dashCooldownDuration = 1.0f;
-        static private float dashAccelerationDuration = 0.1f;
+        static private float dashAccelerationDuration = 0.2f;
         private bool isDashReady = true;
         Vector3 dashMultiplier = Vector3.zero;
         Coroutine dashCoroutine;
@@ -64,7 +64,7 @@ namespace CharMotions
             float time = 0;
             while (time < dashAccelerationDuration)
             {
-                _velocity += _inputs.lookDirection * direction;
+                _velocity += _inputs.lookDirection * direction * 100f * Time.deltaTime;
                 time += Time.deltaTime;
                 yield return null;
             }
@@ -121,7 +121,8 @@ namespace CharMotions
 
 
             // APPLY VELOCITY
-            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 10);
+            _velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 5f);
+            _charBody.velocity = _velocity;
         }
 
         private void ProcessRotation()

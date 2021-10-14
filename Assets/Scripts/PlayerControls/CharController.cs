@@ -31,6 +31,8 @@ public class CharController : MonoBehaviour
 
     private Dictionary<CharState, CharMotions.Motion> _charMotions = new Dictionary<CharState, CharMotions.Motion>();
 
+    [SerializeField]
+    float speed;
 
 
 
@@ -131,6 +133,8 @@ public class CharController : MonoBehaviour
             lookPoint = lookHit.point;
         else
             lookPoint = this.transform.position + lookRotation * Vector3.forward * 10;*/
+
+        speed = _charBody.velocity.magnitude;        
     }
 
     public float GetVelocity()
