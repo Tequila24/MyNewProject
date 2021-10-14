@@ -6,6 +6,8 @@ namespace CharMotions
 {
     public class WalkMotion : CharMotions.Motion
     {
+        bool isInited = false;
+
         public static float stairHeight = 0.25f;
         private static SurfaceController _surfaceControl;
         private Vector3 _heightAdjust;
@@ -47,6 +49,12 @@ namespace CharMotions
 
         private void Init()
         {
+            if (isInited)
+                return;
+
+            //
+
+            isInited = true;
         }
 
         public override void EndMotion()

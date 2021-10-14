@@ -9,15 +9,21 @@ namespace CharMotions
     public class GrappleMotion : Motion
     {
         GrappleHook _grapple;
-        [SerializeField]
-        float delta;
-
         public bool isGrappled
         {
             get { return _grapple.isGrappled; }
         }
 
-        bool dashCooled = true;
+        // AIRDASH
+        [SerializeField]
+        static private float dashCooldownDuration = 1.0f;
+        static private float dashAccelerationDuration = 0.2f;
+        private bool isDashReady = true;
+        Vector3 dashMultiplier = Vector3.zero;
+        Coroutine dashCoroutine;
+
+
+        Vector3 strafeVelocity = Vector3.zero;
 
         public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider)
         {
@@ -47,12 +53,12 @@ namespace CharMotions
 
         private void Init()
         {
-            _inputs.AddKeyLiftListener(KeyCode.Space, this.OnRopeKeysPress);
+            _inputs.AddKeyLiftListener(KeyCode.W, this.OnRopeKeysPress);
 
             _inputs.onInputUpdateEvent.AddListener(this.ProcessCrosshair);
 
-            _inputs.AddKeyPressListener(KeyCode.Mouse1, this.TryGrapple);
-            _inputs.AddKeyLiftListener(KeyCode.Mouse1, this._grapple.Reset);
+            _inputs.AddKeyPressListener(KeyCode.Space, this.TryGrapple);
+            _inputs.AddKeyLiftListener(KeyCode.Space, this._grapple.Reset);
 
             _inputs.AddKeyDoubleTapListener(KeyCode.A, delegate{this.Dash(Vector3.left);});
             _inputs.AddKeyDoubleTapListener(KeyCode.D, delegate{this.Dash(Vector3.right);});
@@ -79,19 +85,32 @@ namespace CharMotions
         {
             if (this.isActiveAndEnabled)
             {
-                if (dashCooled)
+                if (isDashReady)
                 {
-                    _velocity += Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
-                    StartCoroutine(DashCountdown(1));
+                    if (dashCoroutine != null)
+                        StopCoroutine(dashCoroutine);
+                    dashCoroutine = StartCoroutine(DashCooldown(dashCooldownDuration));
+                    StartCoroutine(StartDash(direction));
                 }
             }
         }
 
-        private IEnumerator DashCountdown(float time)
+        private IEnumerator StartDash(Vector3 direction)
         {
-            dashCooled = false;
+            float time = 0;
+            while (time < dashAccelerationDuration)
+            {
+                _velocity += _inputs.lookDirection * direction * 2f;
+                time += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        private IEnumerator DashCooldown(float time)
+        {
+            isDashReady = false;
             yield return new WaitForSeconds(time);
-            dashCooled = true;
+            isDashReady = true;
         }
 
         public override void ProcessMotion()
@@ -130,11 +149,10 @@ namespace CharMotions
 
         private void ProcessVelocity()
         {
-            // GRAPPLE ROPE PHYSICS Interpolate for 5 steps
-            Vector3 grappleDirection = (_grapple.GetLastPoint() - _charBody.transform.position).normalized;
-            float distanceToLastPoint = (_grapple.GetLastPoint() - _charBody.transform.position).magnitude;
+            // GRAPPLE ROPE PHYSICS
+            Vector3 grappleDirection = _grapple.GetDirectionToParent();
+            float distanceToLastPoint = _grapple.GetDistanceToParent();
             float lengthDelta = distanceToLastPoint - _grapple.lengthleft;
-            delta = lengthDelta;
 
             if (lengthDelta > 0) {
                 float tensionCoefficient = 50000000 / _grapple.lengthleft;
@@ -149,10 +167,16 @@ namespace CharMotions
                     _velocity -= centripetalVelocity;
                     Debug.DrawRay(this.transform.position, _velocity, Color.magenta, Time.deltaTime);
                 }
+            } else
+            {
+                _grapple.SetNewLength((_grapple.GetLastPoint() - _charBody.transform.position).magnitude);
             }
 
+            // slight strafe on rope
+            Vector3 strafeDirection = new Vector3( _inputs.right - _inputs.left, 0, 0);
+
             // Rope retraction acceleration
-            _velocity += grappleDirection * (1.0f) * _inputs.space;
+            _velocity += grappleDirection * (1.0f) * _inputs.forward;
 
             // GRAVITYS
             _velocity += Physics.gravity * Time.deltaTime;

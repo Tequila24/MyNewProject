@@ -7,8 +7,14 @@ namespace CharMotions
 {
     public class FreefallMotion : CharMotions.Motion
     {
-        bool dashCooled = true;
 
+        // AIRDASH
+        [SerializeField]
+        static private float dashCooldownDuration = 1.0f;
+        static private float dashAccelerationDuration = 0.1f;
+        private bool isDashReady = true;
+        Vector3 dashMultiplier = Vector3.zero;
+        Coroutine dashCoroutine;
 
         public static FreefallMotion Create(GameObject parent, Rigidbody charBody, Collider charCollider)
         {
@@ -43,19 +49,32 @@ namespace CharMotions
         {
             if (this.isActiveAndEnabled)
             {
-                if (dashCooled)
+                if (isDashReady)
                 {
-                    _velocity += Quaternion.Euler(0, _inputs.mousePositionX, 0) * direction * 30f;
-                    StartCoroutine(DashCountdown(1));
+                    if (dashCoroutine != null)
+                        StopCoroutine(dashCoroutine);
+                    dashCoroutine = StartCoroutine(DashCooldown(dashCooldownDuration));
+                    StartCoroutine(StartDash(direction));
                 }
             }
         }
 
-        private IEnumerator DashCountdown(float time)
+        private IEnumerator StartDash(Vector3 direction)
         {
-            dashCooled = false;
+            float time = 0;
+            while (time < dashAccelerationDuration)
+            {
+                _velocity += _inputs.lookDirection * direction;
+                time += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        private IEnumerator DashCooldown(float time)
+        {
+            isDashReady = false;
             yield return new WaitForSeconds(time);
-            dashCooled = true;
+            isDashReady = true;
         }
 
         public override void BeginMotion(Vector3 oldVelocity)

@@ -40,7 +40,7 @@ namespace CharMotions
         private float _maxLength = 200.0f;
         private float _minLength = 1.0f;
         [SerializeField]
-        private float ropeThickness = 0.1f;
+        private float ropeThickness = 0.2f;
 
         private float _lengthCurrent;
         private float _lengthWrapped;
@@ -64,9 +64,12 @@ namespace CharMotions
         private List<LinePoint> _linePoints = new List<LinePoint>();
         private LineRenderer _lineRenderer;
 
+        private GameObject parent;
+
 
         public GrappleHook(GameObject parentObject)
         {
+            parent = parentObject;
             if (parentObject.GetComponent<LineRenderer>() == null) 
             {
                 _lineRenderer = parentObject.AddComponent<LineRenderer>();
@@ -77,6 +80,16 @@ namespace CharMotions
 		        _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
 		        _lineRenderer.startColor = _lineRenderer.endColor = Color.black;
             }
+        }
+
+        public Vector3 GetDirectionToParent()
+        {
+            return (GetLastPoint() - parent.transform.position).normalized;
+        }
+
+        public float GetDistanceToParent()
+        {
+            return (GetLastPoint() - parent.transform.position).magnitude;
         }
 
         public void SetNewLength(float newLength)
