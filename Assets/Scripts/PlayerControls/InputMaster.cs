@@ -163,6 +163,7 @@ public class InputMaster : MonoBehaviour
     {
         if (_keys.ContainsKey(code)) 
         {
+            _keys[code].liftEvent.RemoveListener(action);
             _keys[code].liftEvent.AddListener(action);
             return true;
         }
@@ -174,6 +175,7 @@ public class InputMaster : MonoBehaviour
     {
         if (_keys.ContainsKey(code)) 
         {
+            _keys[code].liftEvent.RemoveListener(action);
             _keys[code].pressEvent.AddListener(action);
             return true;
         }
@@ -185,6 +187,7 @@ public class InputMaster : MonoBehaviour
     {
         if (_keys.ContainsKey(code)) 
         {
+            _keys[code].liftEvent.RemoveListener(action);
             _keys[code].doubleTapEvent.AddListener(action);
             return true;
         } else {
