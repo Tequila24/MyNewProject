@@ -37,7 +37,7 @@ public class CameraController : MonoBehaviour
         this.transform.position = Vector3.Lerp(this.transform.position, _charControl.transform.position + Quaternion.AngleAxis(_inputs.mousePositionX, Vector3.up) * offset, 0.5f);   
         this.transform.rotation = Quaternion.Slerp( this.transform.rotation, charLookRotation, 0.5f);
 
-        float fovModifier = 1 + _charControl.GetVelocity() / 300;
+        float fovModifier = 1 + _charControl.GetVelocity() / 400;
         thisCamera.fieldOfView = Mathf.MoveTowards(thisCamera.fieldOfView, 60 * fovModifier, 0.5f);
     }
 

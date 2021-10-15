@@ -15,11 +15,11 @@ namespace CharMotions
         }
 
         // AIRDASH
-        [SerializeField]
         static private float dashCooldownDuration = 1.0f;
-        static private float dashAccelerationDuration = 0.2f;
-        private bool isDashReady = true;
-        Vector3 dashMultiplier = Vector3.zero;
+        static private float dashAccelerationDuration = 3f;
+        private bool _isDashReady = true;
+        [SerializeField]
+        Vector3 _dashAcceleration = Vector3.zero;
         Coroutine dashCoroutine;
 
 
@@ -57,8 +57,8 @@ namespace CharMotions
 
             _inputs.onInputUpdateEvent.AddListener(this.ProcessCrosshair);
 
-            _inputs.AddKeyPressListener(KeyCode.Space, this.TryGrapple);
-            _inputs.AddKeyLiftListener(KeyCode.Space, this._grapple.Reset);
+            _inputs.AddKeyPressListener(KeyCode.Mouse1, this.TryGrapple);
+            _inputs.AddKeyLiftListener(KeyCode.Mouse1, this._grapple.Reset);
 
             _inputs.AddKeyDoubleTapListener(KeyCode.A, delegate{this.Dash(Vector3.left);});
             _inputs.AddKeyDoubleTapListener(KeyCode.D, delegate{this.Dash(Vector3.right);});
@@ -85,12 +85,12 @@ namespace CharMotions
         {
             if (this.isActiveAndEnabled)
             {
-                if (isDashReady)
+                if (_isDashReady)
                 {
                     if (dashCoroutine != null)
                         StopCoroutine(dashCoroutine);
-                    dashCoroutine = StartCoroutine(DashCooldown(dashCooldownDuration));
-                    StartCoroutine(StartDash(direction));
+                    dashCoroutine = StartCoroutine(StartDash(direction));
+                    StartCoroutine(DashCooldown(dashCooldownDuration));
                 }
             }
         }
@@ -100,7 +100,17 @@ namespace CharMotions
             float time = 0;
             while (time < dashAccelerationDuration)
             {
-                _velocity += _inputs.lookDirection * direction * 100f * Time.deltaTime;
+                if (time < dashAccelerationDuration * 0.1f)
+                {
+                    _dashAcceleration = Vector3.MoveTowards(_dashAcceleration, 
+                                                            direction * 100, 
+                                                            dashAccelerationDuration * 0.2f / time);
+                } else 
+                {
+                    _dashAcceleration = Vector3.MoveTowards(_dashAcceleration, 
+                                                            Vector3.zero, 
+                                                            dashAccelerationDuration/1.25f / time);
+                }
                 time += Time.deltaTime;
                 yield return null;
             }
@@ -108,9 +118,9 @@ namespace CharMotions
 
         private IEnumerator DashCooldown(float time)
         {
-            isDashReady = false;
+            _isDashReady = false;
             yield return new WaitForSeconds(time);
-            isDashReady = true;
+            _isDashReady = true;
         }
 
         public override void ProcessMotion()
@@ -144,7 +154,7 @@ namespace CharMotions
 
         private void OnRopeKeysPress()
         {
-            _grapple.SetNewLength((_grapple.GetLastPoint() - _charBody.transform.position).magnitude);
+            _grapple.SetNewLength(_grapple.GetDistanceToParent());
         }
 
         private void ProcessVelocity()
@@ -172,8 +182,8 @@ namespace CharMotions
                 _grapple.SetNewLength((_grapple.GetLastPoint() - _charBody.transform.position).magnitude);
             }
 
-            // slight strafe on rope
-            Vector3 strafeDirection = new Vector3( _inputs.right - _inputs.left, 0, 0);
+            // Dash Acceleration
+            _velocity += _inputs.lookDirection * _dashAcceleration * Time.deltaTime;
 
             // Rope retraction acceleration
             _velocity += grappleDirection * (1.0f) * _inputs.forward;
@@ -193,8 +203,7 @@ namespace CharMotions
             }
 
             // APPLY VELOCITY
-            _velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 5f);
-            _charBody.velocity = _velocity;
+            _charBody.velocity = Vector3.ClampMagnitude(_velocity, Physics.gravity.sqrMagnitude * 5f);
         }
 
         private void ProcessRotation()
