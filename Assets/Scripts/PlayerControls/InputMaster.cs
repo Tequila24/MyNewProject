@@ -47,7 +47,7 @@ public class Key
 
 public class InputMaster : MonoBehaviour
 {
-    public static InputMaster _instance;
+    private static InputMaster _instance;
     public static InputMaster Instance { get { return _instance; } }
 
     private Dictionary<KeyCode, Key> _keys = new Dictionary<KeyCode, Key>()

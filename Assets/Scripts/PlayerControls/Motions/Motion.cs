@@ -9,12 +9,12 @@ namespace CharMotions
     {
         [SerializeField]
         protected InputMaster _inputs;
+        protected Animator _animator;
 
         [SerializeField]
         protected Vector3 _velocity = Vector3.zero;
 
         protected Rigidbody _charBody = null;
-        protected Collider _charCollider = null;
         protected GameObject _contactObject = null;
         protected Vector3 _contactNormal;
 
@@ -30,41 +30,6 @@ namespace CharMotions
         private void Awake() 
         {
             _inputs = InputMaster.Instance;
-        }
-
-        protected Vector3 GetDepenetration(Vector3 deltaTransform = new Vector3(), Quaternion deltaRotation = new Quaternion() )
-        {
-            Vector3 summDepenetrationVector = Vector3.zero;
-
-            Collider[] hits = new Collider[10];
-            int hitsAmount = Physics.OverlapBoxNonAlloc(  _charCollider.transform.position + deltaTransform, _charCollider.bounds.extents, 
-                                                            hits, _charCollider.transform.rotation * deltaRotation);
-
-            if ( hitsAmount > 0 )
-            {
-                for (int i = 0; i < hitsAmount; i++)
-                {
-                    Collider hit = hits[i];
-                    if (hit.gameObject == _charCollider.gameObject)
-                        continue;
-
-                    Vector3 depenetrationDirection;
-                    float depenetrationDistance;
-                    Physics.ComputePenetration( _charCollider, _charCollider.transform.position + deltaTransform, _charCollider.transform.rotation * deltaRotation,
-                                                hit, hit.transform.position, hit.transform.rotation,
-                                                out depenetrationDirection, out depenetrationDistance);
-                    summDepenetrationVector += depenetrationDirection * depenetrationDistance;
-                }
-            }
-
-            return summDepenetrationVector;
-        }
-
-        protected float GetDistanceToCollision(Vector3 _velocity)
-        {
-            RaycastHit hit;
-            Physics.Raycast(_charCollider.transform.position, _velocity, out hit);
-            return hit.distance;
         }
 
         private void LateUpdate()

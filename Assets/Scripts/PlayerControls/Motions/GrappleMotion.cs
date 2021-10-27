@@ -25,18 +25,19 @@ namespace CharMotions
 
         Vector3 strafeVelocity = Vector3.zero;
 
-        public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider)
+        public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Animator newAnimator)
         {
             GrappleMotion motion = newParent.GetComponent<GrappleMotion>();
             if (motion == null)
                 motion = newParent.AddComponent<GrappleMotion>();
 
             motion._charBody = newCharBody;
-            motion._charCollider = newCharCollider;
 
             motion._grapple = new GrappleHook(newParent);
 
             motion._csControl = GameObject.Find("Canvas").GetComponent<CrosshairController>();
+
+            motion._animator = newAnimator;
 
             return motion;
         }
@@ -48,7 +49,7 @@ namespace CharMotions
 
         private void OnValidate() 
         {
-            Init();    
+            //Init();    
         }
 
         private void Init()
@@ -123,6 +124,12 @@ namespace CharMotions
             _isDashReady = true;
         }
 
+        private void OnRopeKeysPress()
+        {
+            _grapple.SetNewLength(_grapple.GetDistanceToParent());
+        }
+
+
         public override void ProcessMotion()
         {
             if (!_grapple.isGrappled)
@@ -152,11 +159,6 @@ namespace CharMotions
             _grapple.UpdateLine(this.transform, _charBody.velocity * Time.deltaTime);
         }
 
-        private void OnRopeKeysPress()
-        {
-            _grapple.SetNewLength(_grapple.GetDistanceToParent());
-        }
-
         private void ProcessVelocity()
         {
             // GRAPPLE ROPE PHYSICS
@@ -181,6 +183,10 @@ namespace CharMotions
             {
                 _grapple.SetNewLength((_grapple.GetLastPoint() - _charBody.transform.position).magnitude);
             }
+
+            // strafe velocity
+            Vector3 strafeDirection = new Vector3( _inputs.right - _inputs.left, 0, 0);
+            _velocity += _inputs.lookDirection * strafeDirection * 30 * Time.deltaTime;
 
             // Dash Acceleration
             _velocity += _inputs.lookDirection * _dashAcceleration * Time.deltaTime;

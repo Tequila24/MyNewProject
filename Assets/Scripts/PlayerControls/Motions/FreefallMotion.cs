@@ -16,14 +16,15 @@ namespace CharMotions
         Vector3 dashMultiplier = Vector3.zero;
         Coroutine dashCoroutine;
 
-        public static FreefallMotion Create(GameObject parent, Rigidbody charBody, Collider charCollider)
+        public static FreefallMotion Create(GameObject parent, Rigidbody charBody, Animator newAnimator)
         {
             FreefallMotion motion = parent.GetComponent<FreefallMotion>();
             if (motion == null)
                 motion = parent.AddComponent<FreefallMotion>();
 
             motion._charBody = charBody;
-            motion._charCollider = charCollider;
+
+            motion._animator = newAnimator;
                 
             return motion;
         }
@@ -31,10 +32,6 @@ namespace CharMotions
         private void Start() 
         {
             Init();    
-        }
-        private void OnValidate()
-        {
-            Init();
         }
 
         private void Init()
@@ -104,7 +101,11 @@ namespace CharMotions
             Vector3 step = new Vector3( _inputs.right - _inputs.left,
                                         0,
                                         _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? 10f : 7f);
-            Vector3 freeFallAcceleration = Physics.gravity;
+            Vector3 freeFallAcceleration;
+            if (_velocity.y > 0)
+                freeFallAcceleration = Physics.gravity*3;
+            else
+                freeFallAcceleration = Physics.gravity;
             Vector3 stepAcceleration = yawLookDirection * step;
 
             _velocity += (freeFallAcceleration + stepAcceleration) * Time.deltaTime;
@@ -116,7 +117,7 @@ namespace CharMotions
 
 
             // AIR DRAG
-            Vector3 airDragAcceleration = _velocity.normalized * ( 0.002f * ((_velocity.sqrMagnitude)/2)) / _charBody.mass;
+            Vector3 airDragAcceleration = _velocity.normalized * ( 0.2f * ((_velocity.sqrMagnitude)/2)) / _charBody.mass;
             _velocity -= airDragAcceleration * Time.deltaTime;
 
 

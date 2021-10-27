@@ -16,14 +16,15 @@ public enum CharState
 
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(FreefallMotion))]
+[RequireComponent(typeof(Animator))]
 
 
 public class CharController : MonoBehaviour
 {
     private Rigidbody _charBody;
-    private Collider _charCollider;
     private SurfaceController _surfaceControl;
+    private Animator _animator;
 
     [SerializeField]
     private CharState _currentState;
@@ -51,23 +52,25 @@ public class CharController : MonoBehaviour
         if (_charBody == null)
             _charBody = gameObject.GetComponent<Rigidbody>();
 
-        if (_charCollider == null) 
-            _charCollider = gameObject.GetComponent<Collider>();
+        /*if (_charCollider == null) 
+            _charCollider = gameObject.GetComponent<Collider>();*/
 
         if (this.gameObject.GetComponent<SurfaceController>() == null)
             _surfaceControl = this.gameObject.AddComponent<SurfaceController>();
         else
             _surfaceControl = this.gameObject.GetComponent<SurfaceController>();
 
+        _animator = this.gameObject.GetComponent<Animator>();
+
 
         if (!_charMotions.ContainsKey(CharState.Freefalling))
-            _charMotions.Add(CharState.Freefalling, FreefallMotion.Create(this.gameObject, _charBody, _charCollider));
+            _charMotions.Add(CharState.Freefalling, FreefallMotion.Create(this.gameObject, _charBody, _animator));
 
         if (!_charMotions.ContainsKey(CharState.Walking))
-            _charMotions.Add(CharState.Walking, WalkMotion.Create(this.gameObject, _charBody, _charCollider, _surfaceControl));
+            _charMotions.Add(CharState.Walking, WalkMotion.Create(this.gameObject, _charBody, _surfaceControl, _animator));
         
         if (!_charMotions.ContainsKey(CharState.Grappling))
-            _charMotions.Add(CharState.Grappling, GrappleMotion.Create(this.gameObject, _charBody, _charCollider));
+            _charMotions.Add(CharState.Grappling, GrappleMotion.Create(this.gameObject, _charBody, _animator));
 
         _charBody.velocity = Vector3.zero;
     }
@@ -85,7 +88,7 @@ public class CharController : MonoBehaviour
         bool isGrounded = false, isGrappled = false;
 
         // check ground
-        float min_stand_distance = _charCollider.bounds.extents.y * 1.2f;
+        float min_stand_distance = WalkMotion.floatHeight * 3.0f;
         if (_surfaceControl.contactSeparation < min_stand_distance)
             isGrounded = true;
 
@@ -94,12 +97,18 @@ public class CharController : MonoBehaviour
 
 
         // select current state based on state variables
-        if (!isGrounded && !isGrappled)
+        if (!isGrounded && !isGrappled) 
+        {
             _currentState = CharState.Freefalling;
+        }
         else if (isGrounded && !isGrappled)
+        {
             _currentState = CharState.Walking;
+        }
         else if (isGrappled)
+        {
             _currentState = CharState.Grappling;
+        }
 
         if (_previousState != _currentState)
         {

@@ -17,7 +17,7 @@ public class CameraController : MonoBehaviour
     {
         _inputs = InputMaster.Instance;
         thisCamera = this.gameObject.GetComponent<Camera>();
-        _charControl = GameObject.Find("Player").GetComponent<CharController>();
+        _charControl = GameObject.Find("PlayerCharacter").GetComponent<CharController>();
     }
 
     void FixedUpdate()

@@ -6,35 +6,27 @@ namespace CharMotions
 {
     public class WalkMotion : CharMotions.Motion
     {
-        bool isInited = false;
 
-        public static float stairHeight = 0.25f;
+        public static float floatHeight = 0.00f;
         private static SurfaceController _surfaceControl;
         private Vector3 _heightAdjust;
         private Vector3 _dashVelocity;
         
         float dashTimeout = 0;
 
-        public static WalkMotion Create(GameObject newParent, Rigidbody newCharBody, Collider newCharCollider, SurfaceController newSurfaceControl)
+        public static WalkMotion Create(GameObject newParent, Rigidbody newCharBody, SurfaceController newSurfaceControl, Animator newAnimator)
         {
-
             WalkMotion motion = newParent.GetComponent<WalkMotion>();
             if (motion == null)
                 motion = newParent.AddComponent<WalkMotion>();
             
             motion._charBody = newCharBody;
-            motion._charCollider = newCharCollider;
 
             _surfaceControl = newSurfaceControl;
 
-            return motion;
-        }
+            motion._animator = newAnimator;
 
-        public override void BeginMotion(Vector3 oldVelocity)
-        {
-            _velocity = _surfaceControl.rotationFromNormal * Vector3.ProjectOnPlane(oldVelocity, _surfaceControl.contactPointNormal);
-            _charBody.isKinematic = false;
-            _charBody.useGravity = false;
+            return motion;
         }
 
         private void Start() 
@@ -42,19 +34,15 @@ namespace CharMotions
             Init();
         }
 
-        private void OnValidate()
-        {
-            Init();
-        }
-
         private void Init()
         {
-            if (isInited)
-                return;
+        }
 
-            //
-
-            isInited = true;
+        public override void BeginMotion(Vector3 oldVelocity)
+        {
+            _velocity = _surfaceControl.rotationFromNormal * Vector3.ProjectOnPlane(oldVelocity, _surfaceControl.contactPointNormal);
+            _charBody.isKinematic = false;
+            _charBody.useGravity = false;
         }
 
         public override void EndMotion()
@@ -90,9 +78,25 @@ namespace CharMotions
                 // create step based on inputs
                 Vector3 step = new Vector3( _inputs.right - _inputs.left,
                                             0,
-                                            _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? 10f : 7f);
+                                            _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? 6f : 2f);
+
+                // WALKING ANIMATION
+                if (step.sqrMagnitude > 25.0f)
+                {
+                    _animator.SetBool("isRunning", true);
+                    _animator.SetBool("isWalking", true);
+                } else if (step.sqrMagnitude > 0.05f)
+                {
+                    _animator.SetBool("isWalking", true);
+                    _animator.SetBool("isRunning", false);
+                } else if (step.sqrMagnitude < 0.05f)
+                {
+                    _animator.SetBool("isWalking", false);
+                    _animator.SetBool("isRunning", false);
+                }
+
                 // rotate step to follow look direction
-                step =  mouseLookDirection * step;
+                step =  mouseLookDirection * step * 100.0f * Time.deltaTime;
                 //
                 _velocity = Vector3.Lerp(_velocity, step, 0.2f);
 
@@ -106,9 +110,9 @@ namespace CharMotions
             }
 
             // Adjust char position a little bit above surface
-            Vector3 _heightAdjust = new Vector3(0,
-                                                (_surfaceControl.contactPoint.y + _charCollider.bounds.extents.y * 1.2f) - _charBody.transform.position.y, 
-                                                0) * 1.0f;
+            /*Vector3 _heightAdjust = new Vector3(0,
+                                                (_surfaceControl.contactPoint.y + floatHeight) - _charBody.transform.position.y, 
+                                                0) * 1.0f;*/
 
             // APPLY VELOCITY
             _charBody.velocity = ( _heightAdjust

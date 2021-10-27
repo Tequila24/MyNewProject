@@ -6,7 +6,6 @@ using UnityEngine;
 namespace CharMotions
 {
     [RequireComponent(typeof(Rigidbody))]
-    [RequireComponent(typeof(Collider))]
     
     public class SurfaceController : MonoBehaviour
     {
@@ -23,13 +22,13 @@ namespace CharMotions
         public Quaternion rotationToNormal;
         public Quaternion rotationFromNormal;
 
-
-        private Collider _charCollider;
+        [SerializeField]
+        private Mesh _charMesh;
+        private Bounds _charBounds;
 
         void Start() 
         {
-            if (_charCollider == null)
-                _charCollider = gameObject.GetComponent<Collider>();
+            _charBounds = _charMesh.bounds;
         }
 
         public void Set(RaycastHit rayHit, Vector3 bodyPosition)
@@ -50,7 +49,7 @@ namespace CharMotions
             rotationToNormal = Quaternion.FromToRotation(Vector3.up, contactPointNormal);
             rotationFromNormal = Quaternion.Inverse(rotationToNormal);
 
-            contactSeparation = rayHit.distance;
+            contactSeparation = rayHit.distance - _charBounds.extents.y;
         }
         
         public void Reset()
@@ -73,7 +72,7 @@ namespace CharMotions
         {
             Vector3 rayPosition = this.gameObject.transform.position;
             Vector3 rayDirection = Physics.gravity.normalized;
-            float distance = _charCollider.bounds.size.y * 2;
+            float distance = _charBounds.extents.y + WalkMotion.floatHeight  * 2;
             Transform parent = this.transform;
 
             //Debug.DrawRay(  rayPosition, rayDirection.normalized * distance, Color.red, Time.deltaTime);
