@@ -1188,7 +1188,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputs: {fileID: 0}
-  _velocity: {x: 0, y: 0, z: 0}
 --- !u!114 &4674553051118182671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1202,7 +1201,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputs: {fileID: 0}
-  _velocity: {x: 0, y: 0, z: 0}
 --- !u!114 &4674553051118182661
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1216,8 +1214,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputs: {fileID: 0}
-  _velocity: {x: 0, y: 0, z: 0}
   _dashAcceleration: {x: 0, y: 0, z: 0}
+  grappleTransform: {fileID: 545989787983647236}
 --- !u!120 &4674553051118182660
 LineRenderer:
   m_ObjectHideFlags: 0

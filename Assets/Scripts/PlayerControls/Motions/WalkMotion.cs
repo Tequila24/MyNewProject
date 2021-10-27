@@ -10,15 +10,15 @@ namespace CharMotions
     public class WalkMotion : CharMotions.Motion
     {
         public const float k_WalkVelocity = 2.0f;
-        public const float k_RunVelocity = 6.0f;
-        public const float k_FloatHeight = 0.0f;
+        public const float k_RunVelocity = 5.0f;
+        public const float k_FloatHeight = 0.07f;
 
 
         private SurfaceController _surfaceControl;
 
         public bool isGrounded
         {
-            get { return _surfaceControl.contactSeparation < 0.1f ? true : false; }
+            get { return _surfaceControl.contactSeparation < k_FloatHeight ? true : false; }
         }
 
         public static WalkMotion Create(GameObject newParent, Rigidbody newCharBody, Animator newAnimator)
@@ -87,18 +87,18 @@ namespace CharMotions
                 // create step based on inputs
                 Vector3 step = new Vector3( _inputs.right - _inputs.left,
                                             0,
-                                            _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? 6f : 2f);
+                                            _inputs.forward - _inputs.backward ).normalized * ((_inputs.shift > 0) ? k_RunVelocity : k_WalkVelocity);
 
                 // WALKING ANIMATION
-                if (step.sqrMagnitude > 25.0f)
+                if (_inputs.shift == 1)
                 {
                     _animator.SetBool("isRunning", true);
                     _animator.SetBool("isWalking", true);
-                } else if (step.sqrMagnitude > 0.05f)
+                } else if (step.sqrMagnitude > 0 )
                 {
                     _animator.SetBool("isWalking", true);
                     _animator.SetBool("isRunning", false);
-                } else if (step.sqrMagnitude < 0.05f)
+                } else
                 {
                     _animator.SetBool("isWalking", false);
                     _animator.SetBool("isRunning", false);

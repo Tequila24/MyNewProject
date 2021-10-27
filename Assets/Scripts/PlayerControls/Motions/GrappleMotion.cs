@@ -21,6 +21,8 @@ namespace CharMotions
         [SerializeField]
         Vector3 _dashAcceleration = Vector3.zero;
         Coroutine dashCoroutine;
+        [SerializeField]
+        Transform grappleTransform;
         
         protected CrosshairController _csControl = null;
 
@@ -32,7 +34,7 @@ namespace CharMotions
 
             motion._charBody = newCharBody;
 
-            motion._grapple = new GrappleHook(newParent);
+            motion._grapple = new GrappleHook(newParent, motion.grappleTransform);
 
             motion._csControl = GameObject.Find("Canvas").GetComponent<CrosshairController>();
 
@@ -66,7 +68,7 @@ namespace CharMotions
         
         private void TryGrapple()
         {
-            _grapple.TryGrappleFromTo(_charBody.transform.position, _inputs.lookDirection);
+            _grapple.TryGrappleFromTo(_inputs.lookDirection);
         }
 
         public override void BeginMotion(Vector3 oldVelocity)
@@ -144,7 +146,7 @@ namespace CharMotions
         private void ProcessCrosshair()
         {
             RaycastHit aimPointHit;
-            bool canReach = _grapple.IsCanReach(_charBody.transform.position, _inputs.lookDirection, out aimPointHit);
+            bool canReach = _grapple.IsCanReach(_inputs.lookDirection, out aimPointHit);
 
             _csControl.SetCrosshairColor(canReach);
             if (canReach)
@@ -155,7 +157,7 @@ namespace CharMotions
 
         private void ProcessGrapple()
         {   
-            _grapple.UpdateLine(this.transform, _charBody.velocity * Time.deltaTime);
+            _grapple.UpdateLine(_charBody.velocity * Time.deltaTime);
         }
 
         private void ProcessVelocity()

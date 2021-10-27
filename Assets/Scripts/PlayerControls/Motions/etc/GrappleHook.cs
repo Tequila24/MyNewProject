@@ -37,10 +37,9 @@ namespace CharMotions
             }
         }
 
-        private float _maxLength = 200.0f;
-        private float _minLength = 1.0f;
-        [SerializeField]
-        private float ropeThickness = 0.2f;
+        private float k_maxLength = 200.0f;
+        private float k_minLength = 1.0f;
+        private float k_ropeThickness = 0.2f;
 
         private float _lengthCurrent;
         private float _lengthWrapped;
@@ -58,24 +57,24 @@ namespace CharMotions
             get { return _isGrappled ;}
         }
 
-        private int _winchDirection;
-        public int winchDirection { get { return _winchDirection; } }
-
         private List<LinePoint> _linePoints = new List<LinePoint>();
         private LineRenderer _lineRenderer;
 
         private GameObject parent;
+        private Transform transform;
 
 
-        public GrappleHook(GameObject parentObject)
+        public GrappleHook(GameObject parentObject, Transform newTransform)
         {
+            transform = newTransform;
+
             parent = parentObject;
-            if (parentObject.GetComponent<LineRenderer>() == null) 
+            if (parent.GetComponent<LineRenderer>() == null) 
             {
-                _lineRenderer = parentObject.AddComponent<LineRenderer>();
+                _lineRenderer = parent.AddComponent<LineRenderer>();
             } else
             {
-                _lineRenderer = parentObject.GetComponent<LineRenderer>();
+                _lineRenderer = parent.GetComponent<LineRenderer>();
 		        _lineRenderer.startWidth = _lineRenderer.endWidth = 0.15f;
 		        _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
 		        _lineRenderer.startColor = _lineRenderer.endColor = Color.black;
@@ -84,12 +83,12 @@ namespace CharMotions
 
         public Vector3 GetDirectionToParent()
         {
-            return (GetLastPoint() - parent.transform.position).normalized;
+            return (GetLastPoint() - transform.position).normalized;
         }
 
         public float GetDistanceToParent()
         {
-            return (GetLastPoint() - parent.transform.position).magnitude;
+            return (GetLastPoint() - transform.position).magnitude;
         }
 
         public void SetNewLength(float newLength)
@@ -99,7 +98,7 @@ namespace CharMotions
 
         public void Reset()
         {
-            _lengthCurrent = _minLength;
+            _lengthCurrent = k_minLength;
             _lengthWrapped = 0.0f;
             _linePoints.Clear();
             _lineRenderer.positionCount = 0;
@@ -123,20 +122,20 @@ namespace CharMotions
             _lengthLeft = _lengthCurrent - _lengthWrapped;
         }
 
-        public bool IsCanReach(Vector3 fromPosition, Quaternion lookDirection, out RaycastHit hit)
+        public bool IsCanReach(Quaternion lookDirection, out RaycastHit hit)
         {
-            return Physics.Raycast(fromPosition, lookDirection * Vector3.forward, out hit, _maxLength, 1, 0);
+            return Physics.Raycast(transform.position, lookDirection * Vector3.forward, out hit, k_maxLength, 1, 0);
         }
 
-        public bool IsCanReach(Vector3 fromPosition, Quaternion lookDirection)
+        public bool IsCanReach(Quaternion lookDirection)
         {
-            return Physics.Raycast(fromPosition, lookDirection * Vector3.forward, _maxLength, 1, 0);
+            return Physics.Raycast(transform.position, lookDirection * Vector3.forward, k_maxLength, 1, 0);
         }
 
-        public void TryGrappleFromTo(Vector3 fromPosition, Quaternion lookDirection)
+        public void TryGrappleFromTo(Quaternion lookDirection)
         {
             RaycastHit rayHit; 
-            if (IsCanReach(fromPosition, lookDirection, out rayHit)) 
+            if (IsCanReach(lookDirection, out rayHit)) 
             {
                 _lengthCurrent = rayHit.distance;
                 _linePoints.Add(new LinePoint(rayHit));
@@ -145,8 +144,7 @@ namespace CharMotions
             }
         }
 
-
-        public void UpdateLine(Transform charTransform, Vector3 charVelocity)
+        public void UpdateLine(Vector3 charVelocity)
         {
             //check if wrapped objects exist
             for (int point_n = 0; point_n < _linePoints.Count; point_n++)
@@ -162,18 +160,18 @@ namespace CharMotions
 
             // cast ray between last point and character
             RaycastHit hit;
-            if (Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
-                if (hit.transform != charTransform) 
+            if (Physics.Linecast(transform.position, _linePoints[_linePoints.Count-1].GetWorldPoint(), out hit)) 
+                if (hit.transform != transform) 
                     if (Vector3.Distance(hit.point, _linePoints[_linePoints.Count-1].GetWorldPoint()) > 0.1f)
                      {
                         RaycastHit reverseHit;
-                        if (Physics.Linecast(_linePoints[_linePoints.Count-1].GetWorldPoint(), charTransform.position, out reverseHit))
+                        if (Physics.Linecast(_linePoints[_linePoints.Count-1].GetWorldPoint(), transform.position, out reverseHit))
                         {
-                            _linePoints.Add(new LinePoint(hit.point + (hit.normal + reverseHit.normal)/2 * ropeThickness, hit.transform));
+                            _linePoints.Add(new LinePoint(hit.point + (hit.normal + reverseHit.normal)/2 * k_ropeThickness, hit.transform));
                         }
                         else
                         {
-                            _linePoints.Add(new LinePoint(hit.point + hit.normal * ropeThickness, hit.transform));
+                            _linePoints.Add(new LinePoint(hit.point + hit.normal * k_ropeThickness, hit.transform));
                         }
                      }
 
@@ -182,12 +180,12 @@ namespace CharMotions
             // check if rope point can move to new position
             if (_linePoints.Count > 1)
             {
-                Quaternion fromLastToPrevious = Quaternion.FromToRotation( (_linePoints[_linePoints.Count-1].GetWorldPoint() - charTransform.position),
-                                                                               (_linePoints[_linePoints.Count-2].GetWorldPoint() - charTransform.position) );
-                Vector3 newRopePosition = charTransform.position + fromLastToPrevious * (_linePoints[_linePoints.Count-1].GetWorldPoint() - charTransform.position);
+                Quaternion fromLastToPrevious = Quaternion.FromToRotation( (_linePoints[_linePoints.Count-1].GetWorldPoint() - transform.position),
+                                                                               (_linePoints[_linePoints.Count-2].GetWorldPoint() - transform.position) );
+                Vector3 newRopePosition = transform.position + fromLastToPrevious * (_linePoints[_linePoints.Count-1].GetWorldPoint() - transform.position);
 
                 RaycastHit unstuckHit;
-                bool isPreviousVisible = !(Physics.Linecast(charTransform.position, _linePoints[_linePoints.Count-2].GetWorldPoint()));
+                bool isPreviousVisible = !(Physics.Linecast(transform.position, _linePoints[_linePoints.Count-2].GetWorldPoint()));
                 bool isWayObstructed = Physics.Linecast(newRopePosition, _linePoints[_linePoints.Count-1].GetWorldPoint(), out unstuckHit);
 
                 if ( (!isWayObstructed && isPreviousVisible) || ( isPreviousVisible && (unstuckHit.point - _linePoints[_linePoints.Count-1].GetWorldPoint()).sqrMagnitude < 0.1f) )
@@ -203,7 +201,7 @@ namespace CharMotions
                 _lineRenderer.SetPosition(point_n, _linePoints[point_n].GetWorldPoint());
                 _lineRenderer.positionCount++;
             }
-            _lineRenderer.SetPosition(_lineRenderer.positionCount-1, charTransform.position + charVelocity);
+            _lineRenderer.SetPosition(_lineRenderer.positionCount-1, transform.position + charVelocity);
 
 
             // DEBUG

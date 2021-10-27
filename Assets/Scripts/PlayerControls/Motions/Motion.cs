@@ -11,7 +11,7 @@ namespace CharMotions
         protected InputMaster _inputs;
         protected Animator _animator;
 
-        [SerializeField]
+        //[SerializeField]
         protected Vector3 _velocity = Vector3.zero;
 
         protected Rigidbody _charBody = null;
