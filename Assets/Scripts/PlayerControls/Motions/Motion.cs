@@ -18,8 +18,6 @@ namespace CharMotions
         protected GameObject _contactObject = null;
         protected Vector3 _contactNormal;
 
-        protected CrosshairController _csControl = null;
-
         abstract public void BeginMotion(Vector3 oldVelocity);
         abstract public void EndMotion();
 
@@ -43,7 +41,7 @@ namespace CharMotions
             _contactObject = hit.gameObject;
             for (int i = 0; i < hit.contactCount; i++)
             {
-                _contactNormal += hit.contacts[i].normal;    
+                _contactNormal += hit.contacts[i].normal;
             }
             _contactNormal.Normalize();
         }
@@ -53,7 +51,7 @@ namespace CharMotions
             _contactObject = hit.gameObject;
             for (int i = 0; i < hit.contactCount; i++)
             {
-                _contactNormal += hit.contacts[i].normal;    
+                _contactNormal += hit.contacts[i].normal;
             }
             _contactNormal.Normalize();
         }

@@ -16,14 +16,12 @@ public enum CharState
 
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(FreefallMotion))]
 [RequireComponent(typeof(Animator))]
 
 
 public class CharController : MonoBehaviour
 {
     private Rigidbody _charBody;
-    private SurfaceController _surfaceControl;
     private Animator _animator;
 
     [SerializeField]
@@ -52,22 +50,13 @@ public class CharController : MonoBehaviour
         if (_charBody == null)
             _charBody = gameObject.GetComponent<Rigidbody>();
 
-        /*if (_charCollider == null) 
-            _charCollider = gameObject.GetComponent<Collider>();*/
-
-        if (this.gameObject.GetComponent<SurfaceController>() == null)
-            _surfaceControl = this.gameObject.AddComponent<SurfaceController>();
-        else
-            _surfaceControl = this.gameObject.GetComponent<SurfaceController>();
-
         _animator = this.gameObject.GetComponent<Animator>();
-
 
         if (!_charMotions.ContainsKey(CharState.Freefalling))
             _charMotions.Add(CharState.Freefalling, FreefallMotion.Create(this.gameObject, _charBody, _animator));
 
         if (!_charMotions.ContainsKey(CharState.Walking))
-            _charMotions.Add(CharState.Walking, WalkMotion.Create(this.gameObject, _charBody, _surfaceControl, _animator));
+            _charMotions.Add(CharState.Walking, WalkMotion.Create(this.gameObject, _charBody, _animator));
         
         if (!_charMotions.ContainsKey(CharState.Grappling))
             _charMotions.Add(CharState.Grappling, GrappleMotion.Create(this.gameObject, _charBody, _animator));
@@ -87,10 +76,7 @@ public class CharController : MonoBehaviour
 
         bool isGrounded = false, isGrappled = false;
 
-        // check ground
-        float min_stand_distance = WalkMotion.floatHeight * 3.0f;
-        if (_surfaceControl.contactSeparation < min_stand_distance)
-            isGrounded = true;
+        isGrounded = (_charMotions[CharState.Walking] as WalkMotion).isGrounded;
 
         // check is grappled
         isGrappled = (_charMotions[CharState.Grappling] as GrappleMotion).isGrappled;
@@ -129,8 +115,6 @@ public class CharController : MonoBehaviour
 
     void FixedUpdate()
     {
-        _surfaceControl.UpdateSurface();
-
         if (_charMotions.ContainsKey(_currentState))
         {
             _charMotions[_currentState].ProcessMotion();

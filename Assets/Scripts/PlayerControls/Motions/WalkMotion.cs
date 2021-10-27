@@ -4,17 +4,24 @@ using UnityEngine;
 
 namespace CharMotions
 {
+    [RequireComponent(typeof(SurfaceController))]
+
+
     public class WalkMotion : CharMotions.Motion
     {
+        public const float k_WalkVelocity = 2.0f;
+        public const float k_RunVelocity = 6.0f;
+        public const float k_FloatHeight = 0.0f;
 
-        public static float floatHeight = 0.00f;
-        private static SurfaceController _surfaceControl;
-        private Vector3 _heightAdjust;
-        private Vector3 _dashVelocity;
-        
-        float dashTimeout = 0;
 
-        public static WalkMotion Create(GameObject newParent, Rigidbody newCharBody, SurfaceController newSurfaceControl, Animator newAnimator)
+        private SurfaceController _surfaceControl;
+
+        public bool isGrounded
+        {
+            get { return _surfaceControl.contactSeparation < 0.1f ? true : false; }
+        }
+
+        public static WalkMotion Create(GameObject newParent, Rigidbody newCharBody, Animator newAnimator)
         {
             WalkMotion motion = newParent.GetComponent<WalkMotion>();
             if (motion == null)
@@ -22,7 +29,9 @@ namespace CharMotions
             
             motion._charBody = newCharBody;
 
-            _surfaceControl = newSurfaceControl;
+            motion._surfaceControl = newParent.GetComponent<SurfaceController>();
+            if (motion._surfaceControl == null)
+                motion._surfaceControl = newParent.AddComponent<SurfaceController>();
 
             motion._animator = newAnimator;
 
@@ -115,8 +124,7 @@ namespace CharMotions
                                                 0) * 1.0f;*/
 
             // APPLY VELOCITY
-            _charBody.velocity = ( _heightAdjust
-                                   + _surfaceControl.rotationToNormal * _velocity);
+            _charBody.velocity = ( _surfaceControl.rotationToNormal * _velocity );
         }
 
         private void ProcessRotation()

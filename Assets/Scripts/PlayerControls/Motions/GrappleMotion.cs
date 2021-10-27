@@ -21,9 +21,8 @@ namespace CharMotions
         [SerializeField]
         Vector3 _dashAcceleration = Vector3.zero;
         Coroutine dashCoroutine;
-
-
-        Vector3 strafeVelocity = Vector3.zero;
+        
+        protected CrosshairController _csControl = null;
 
         public static GrappleMotion Create(GameObject newParent, Rigidbody newCharBody, Animator newAnimator)
         {

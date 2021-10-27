@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace CharMotions
 {
-    [RequireComponent(typeof(Rigidbody))]
-    
     public class SurfaceController : MonoBehaviour
     {
 
@@ -22,13 +20,8 @@ namespace CharMotions
         public Quaternion rotationToNormal;
         public Quaternion rotationFromNormal;
 
-        [SerializeField]
-        private Mesh _charMesh;
-        private Bounds _charBounds;
-
         void Start() 
         {
-            _charBounds = _charMesh.bounds;
         }
 
         public void Set(RaycastHit rayHit, Vector3 bodyPosition)
@@ -49,7 +42,7 @@ namespace CharMotions
             rotationToNormal = Quaternion.FromToRotation(Vector3.up, contactPointNormal);
             rotationFromNormal = Quaternion.Inverse(rotationToNormal);
 
-            contactSeparation = rayHit.distance - _charBounds.extents.y;
+            contactSeparation = rayHit.distance;
         }
         
         public void Reset()
@@ -68,17 +61,16 @@ namespace CharMotions
             rotationFromNormal = Quaternion.identity;
         }
 
-        public void UpdateSurface()
+        public void FixedUpdate()
         {
             Vector3 rayPosition = this.gameObject.transform.position;
             Vector3 rayDirection = Physics.gravity.normalized;
-            float distance = _charBounds.extents.y + WalkMotion.floatHeight  * 2;
             Transform parent = this.transform;
 
             //Debug.DrawRay(  rayPosition, rayDirection.normalized * distance, Color.red, Time.deltaTime);
             
             RaycastHit surfaceRay;
-            if (Physics.Raycast(    rayPosition, rayDirection, out surfaceRay, distance) ) {
+            if (Physics.Raycast(rayPosition, rayDirection, out surfaceRay) ) {
                 if ( !(surfaceRay.transform.IsChildOf(parent)) )
             	    Set(surfaceRay, this.gameObject.transform.position);
             } else {
